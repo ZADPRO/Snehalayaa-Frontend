@@ -1,0 +1,340 @@
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
+* {
+  font-size: 12px;
+}
+
+/* PASSWORD */
+.p-password-input.p-inputtext.p-component {
+  width: 100%;
+  height: 100%;
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+}
+
+.p-icon-field.p-icon-field-right {
+  width: 100%;
+}
+
+.p-column-header-content {
+  justify-content: space-between;
+}
+
+.p-float-label label {
+  margin-top: 4px;
+  background: white;
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+
+.always-float label {
+  top: -0.75rem !important;
+  font-size: 0.75rem !important;
+  color: #6b7280;
+  transition: none !important;
+  background: white;
+  z-index: 1;
+  padding: 0px 4px;
+}
+
+.always-float .p-inputtext {
+  padding-top: 10px !important;
+}
+
+/* FLOAT LABEL COLORING */
+.p-float-label label {
+  color: #6f1f5f;
+}
+
+.p-float-label input:focus + label,
+.p-float-label input.p-filled + label {
+  color: #6f1f5f;
+}
+
+.p-float-label .p-dropdown.p-focus + label,
+.p-float-label .p-dropdown.p-filled + label {
+  color: #6f1f5f;
+}
+
+.p-float-label .p-multiselect.p-focus + label,
+.p-float-label .p-multiselect.p-filled + label {
+  color: #6f1f5f;
+}
+
+.p-float-label .p-autocomplete.p-focus + label,
+.p-float-label .p-autocomplete.p-filled + label {
+  color: #6f1f5f;
+}
+
+.p-float-label .p-calendar.p-focus + label,
+.p-float-label .p-calendar.p-filled + label {
+  color: #6f1f5f;
+}
+
+.p-float-label label {
+  transition: all 0.2s ease;
+}
+
+.p-inputtext:enabled:focus {
+  box-shadow: none;
+}
+.p-calendar:not(.p-calendar-disabled).p-focus > .p-inputtext {
+  outline: none;
+  outline-offset: none;
+  box-shadow: none;
+  border-color: #6f1f5f;
+}
+
+/* .p-float-label input:focus + label, .p-float-label input.p-filled + label
+Specificity: (0,2,2)
+ {
+    color: #6f1f5f;
+} */
+
+.p-button {
+  box-shadow: none;
+}
+
+.p-dropdown:not(.p-disabled).p-focus {
+  box-shadow: none;
+}
+
+.p-inputswitch-slider::before,
+::after {
+  margin-top: -10px;
+}
+
+.react-tel-input {
+  font-family: var(--font-family);
+  font-feature-settings: var(--font-feature-settings, normal);
+  font-size: 1rem;
+  color: #495057;
+  background: #ffffff;
+  /* border: 1px solid #ced4da; */
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+  appearance: none;
+  border-radius: 3px;
+  outline-color: transparent;
+}
+
+.form-control.p-inputtext {
+  position: relative;
+  font-size: 14px;
+  letter-spacing: 0.01rem;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-left: 48px;
+  margin-left: 0;
+  background: #ffffff;
+  border: 1px solid #cacaca;
+  border-radius: 3px !important;
+  line-height: 25px;
+  height: 2.5rem !important;
+  width: 100% !important;
+  outline: none;
+}
+
+.p-error {
+  color: #f44336;
+  font-size: 0.75rem;
+}
+
+/* .p-toast-message-content {
+  gap: 10px;
+} */
+
+.p-dropdown.p-component.p-inputwrapper.p-dropdown-clearable.p-inputwrapper-filled svg {
+  margin-top: -7px;
+}
+
+/* .p-button {
+  gap: 4px;
+} */
+
+.p-button svg {
+  /* margin-top: 2px; */
+}
+
+/* SIDEBAR HEADER */
+.p-sidebar .p-sidebar-header {
+  padding: 10px 1rem;
+}
+
+/* MESSAGE WRAPPER */
+.p-message-wrapper {
+  padding: 10px;
+  margin-top: -15px;
+}
+
+.p-button-label.p-c {
+  text-align: start;
+}
+
+.customizedBtn .p-button-label.p-c {
+  text-align: center;
+}
+
+.p-button-primary {
+  background-color: #6f1f5f;
+}
+
+.p-button-outlined.custom-primary {
+  border: 1px solid #6f1f5f; /* border color */
+  color: #6f1f5f; /* text color */
+  background-color: transparent; /* keep background transparent */
+}
+
+.p-button-outlined.custom-primary:hover {
+  background-color: #6f1f5f; /* fill background on hover */
+  color: #fff; /* text color on hover */
+}
+
+.paymentNotesCalendarIcon .p-datepicker-trigger {
+  background-color: #6f1f5f;
+  border: 1px solid #6f1f5f; /* border color */
+}
+
+.p-dialog .p-dialog-header {
+  padding: 10px;
+}
+
+.p-datatable-wrapper {
+  scrollbar-width: thin;
+}
+
+.hidden-for-print {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  visibility: visible;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.customized-timeline .p-timeline-event-marker {
+  background-color: #1976d2;
+  color: white;
+}
+
+.custom-confirm-dialog .p-dialog {
+  width: 800px !important; /* Adjust as needed */
+  max-width: 90vw;
+}
+
+.custom-multiselect .p-multiselect-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.5rem; /* Ensures consistent height */
+}
+
+.custom-multiselect .p-multiselect {
+  min-height: 2.5rem;
+}
+
+.p-divider.p-divider-vertical {
+  /* margin-left: 0;
+    margin-right: 5px;
+    padding: 3px ; */
+  margin: 0;
+}
+
+.verticalDivider.p-divider.p-divider-vertical {
+  margin: 0rem 1rem !important;
+}
+
+.p-sidebar-header.p-sidebar-custom-header {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.p-button-primary.p-button.p-component .p-button-label.p-c {
+  text-align: center;
+}
+
+.addEditGRNProductDialog .p-dialog-footer {
+  padding: 10px;
+}
+
+/* S.No and Line Item (InputNumber) */
+.productGRNTableInputLineItem .p-inputnumber-input {
+  width: 40px;
+}
+
+.productGRNTableInputSNo .p-inputnumber-input {
+  width: 40px;
+}
+
+/* Ref No (InputText) */
+.productGRNTableInputRefNo .p-inputtext {
+  width: 3rem;
+}
+
+/* Description (InputText) */
+.productGRNTableInputDescription .p-inputtext {
+  width: 10rem; /* can adjust easily later */
+}
+
+/* Discount % (InputNumber) */
+.productGRNTableInputDiscountPercent .p-inputnumber-input {
+  width: 60px;
+}
+
+/* Discount Price (InputNumber) */
+.productGRNTableInputDiscountPrice .p-inputnumber-input {
+  width: 80px;
+}
+
+/* Profit % (InputNumber) */
+.productGRNTableInputProfitPercent .p-inputnumber-input {
+  width: 60px;
+}
+
+/* Price (InputNumber) */
+.productGRNTableInputPrice .p-inputnumber-input {
+  width: 80px;
+}
+
+/* Total (InputNumber) */
+.productGRNTableInputTotalAmt .p-inputnumber-input {
+  width: 80px;
+}
+
+.grnTableUI .p-datatable-wrapper table thead tr th,
+.grnTableUI .p-datatable-wrapper table tbody tr td {
+  padding: 2px;
+}
+
+.p-datatable-wrapper table thead tr th,
+.p-datatable-wrapper table tbody tr td {
+  padding: 5px;
+}
+
+.p-datatable .p-checkbox {
+  transform: scale(1);
+  align-items: center;
+  justify-content: center;
+}
+
+.p-datatable .p-checkbox-box {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.p-datatable .p-checkbox-icon {
+  font-size: 10px !important;
+}
