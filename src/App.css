@@ -1,14 +1,6 @@
-.erp-grid .erp-item {
-  display: flex !important;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
 .erp-grid {
   display: grid !important;
   grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-  gap: 20px !important;
 }
 
 @media (max-width: 1024px) {
@@ -19,6 +11,6 @@
 
 @media (max-width: 640px) {
   .erp-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(1, 1fr) !important;
   }
 }

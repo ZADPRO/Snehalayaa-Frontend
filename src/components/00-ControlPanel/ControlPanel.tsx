@@ -19,79 +19,81 @@ const ControlPanel: React.FC = () => {
   const elements = [
     {
       name: "Dashboard",
-      icon: <LayoutDashboard className="w-18 h-18 text-indigo-600" />,
+      icon: <LayoutDashboard className="w-20 h-20" />,
     },
-    { name: "Inventory", icon: <Boxes className="w-18 h-18 text-blue-600" /> },
+    { name: "Inventory", icon: <Boxes className="w-20 h-20" /> },
     {
       name: "Stock Transfers",
-      icon: <Repeat className="w-18 h-18" />,
+      icon: <Repeat className="w-20 h-20" />,
     },
     {
       name: "Image Upload",
-      icon: <Image className="w-18 h-18 text-pink-600" />,
+      icon: <Image className="w-20 h-20" />,
     },
     {
       name: "Shopify",
-      icon: <ShoppingCart className="w-18 h-18 text-orange-600" />,
+      icon: <ShoppingCart className="w-20 h-20" />,
     },
     {
       name: "Catalogs",
-      icon: <BookOpen className="w-18 h-18 text-teal-600" />,
+      icon: <BookOpen className="w-20 h-20" />,
     },
     {
       name: "Purchase Order",
-      icon: <ClipboardList className="w-18 h-18 text-purple-600" />,
+      icon: <ClipboardList className="w-20 h-20" />,
     },
     {
       name: "Debit Note",
-      icon: <BadgeDollarSign className="w-18 h-18 text-red-500" />,
+      icon: <BadgeDollarSign className="w-20 h-20" />,
     },
     {
       name: "Product Settings",
-      icon: <Settings className="w-18 h-18 text-gray-700" />,
+      icon: <Settings className="w-20 h-20" />,
     },
-    { name: "Employees", icon: <Users className="w-18 h-18 text-green-700" /> },
+    { name: "Employees", icon: <Users className="w-20 h-20" /> },
     {
       name: "Supplier & Customers",
-      icon: <UserCog className="w-18 h-18 text-yellow-600" />,
+      icon: <UserCog className="w-20 h-20" />,
     },
-    { name: "Attributes", icon: <Tag className="w-18 h-18 text-pink-500" /> },
+    { name: "Attributes", icon: <Tag className="w-20 h-20" /> },
     {
       name: "Branches",
-      icon: <Building2 className="w-18 h-18 text-blue-700" />,
+      icon: <Building2 className="w-20 h-20" />,
     },
   ];
 
   return (
-    <div className="p-3 w-screen h-screen bg-gradient-to-bl from-[#8e68ca] to-[#3e2c56]">
-      <div className="flex justify-between">
-        <p>Logo</p>
-        <p>profile icon</p>
+    <div className="p-3 w-screen h-screen bg-gradient-to-bl from-[#8e68ca] to-[#3e2c56] text-white">
+      {/* Header */}
+      <div className="flex justify-between items-center px-4">
+        <p className="font-bold text-lg">Logo</p>
+        <p className="font-semibold">Profile</p>
       </div>
-      <div className="flex justify-center items-center">
-        <div className="p-6">
-          <div className="erp-grid">
-            {elements.map((item, index) => (
-              <div>
-                <div
-                  key={index}
-                  className="
-                bg-white shadow-sm rounded-xl p-4 cursor-pointer
-                flex flex-col items-center justify-center
-                hover:shadow-md hover:-translate-y-1
-                transition-all duration-200
-              "
-                >
-                  <div className="flex justify-center items-center h-20">
-                    {item.icon}
-                  </div>
+
+      {/* Centered Grid Section */}
+      <div className="flex justify-center items-center min-h-[80vh]">
+        <div className="erp-grid gap-5">
+          {elements.map((item, index) => (
+            <div key={index} className="flex flex-col items-center">
+              <div
+                className="
+                  bg-white shadow-md rounded-xl p-6 cursor-pointer
+                  flex flex-col items-center justify-center
+                  hover:shadow-xl hover:-translate-y-1
+                  transition-all duration-200 
+                  h-36 w-36
+                "
+              >
+                <div className="flex justify-center items-center h-full text-black">
+                  {item.icon}
                 </div>
-                <p className="font-bold text-white text-center mt-2">
-                  {item.name}
-                </p>
               </div>
-            ))}
-          </div>
+
+              <p className="font-semibold text-center mt-2 uppercase">
+                {item.name}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
