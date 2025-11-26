@@ -1,5 +1,7 @@
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 * {
@@ -113,10 +115,7 @@ Specificity: (0,2,2)
   color: #495057;
   background: #ffffff;
   /* border: 1px solid #ced4da; */
-  transition:
-    background-color 0.2s,
-    color 0.2s,
-    border-color 0.2s,
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s,
     box-shadow 0.2s;
   appearance: none;
   border-radius: 3px;
@@ -149,7 +148,8 @@ Specificity: (0,2,2)
   gap: 10px;
 } */
 
-.p-dropdown.p-component.p-inputwrapper.p-dropdown-clearable.p-inputwrapper-filled svg {
+.p-dropdown.p-component.p-inputwrapper.p-dropdown-clearable.p-inputwrapper-filled
+  svg {
   margin-top: -7px;
 }
 
