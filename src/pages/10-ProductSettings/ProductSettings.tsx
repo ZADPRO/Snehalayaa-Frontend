@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 
 import "./ProductSettings.css";
+import ProductSettingsSubCategories from "../../components/10-ProductSettingsComponents/ProductSettingsSubCategories/ProductSettingsSubCategories";
+import ProductSettingsProdCombo from "../../components/10-ProductSettingsComponents/ProductSettingsProdCombo/ProductSettingsProdCombo";
 
 const sidebarItems = [
   {
@@ -27,13 +29,13 @@ const sidebarItems = [
     key: "subCategories",
     label: "Sub-Categories",
     icon: <FolderTree size={20} className="sidebar-icon" />,
-    component: <ProductSettingsCategories />,
+    component: <ProductSettingsSubCategories />,
   },
   {
     key: "products",
     label: "Products",
     icon: <Package size={20} className="sidebar-icon" />,
-    component: <ProductSettingsCategories />,
+    component: <ProductSettingsProdCombo />,
   },
   {
     key: "brand",
@@ -74,7 +76,7 @@ const sidebarItems = [
 ];
 
 const ProductSettings: React.FC = () => {
-  const [activeKey, setActiveKey] = useState("categories");
+  const [activeKey, setActiveKey] = useState("products");
 
   return (
     <div>

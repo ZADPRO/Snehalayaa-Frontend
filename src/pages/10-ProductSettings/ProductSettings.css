@@ -6,7 +6,7 @@
 }
 
 .p-datatable-header {
-  padding: 3px;
+  padding: 10px;
 }
 
 /* Main layout under header */
@@ -21,7 +21,7 @@
 
 /* Sidebar */
 .settingsSidebar {
-  width: 13%;
+  width: 17%;
   padding: 10px;
   overflow-y: auto;
   display: flex;
@@ -43,15 +43,15 @@
 }
 
 .sidebarItem:hover {
-  background-color: #f8edf6; /* very light shade near #6f1f5f */
+  background-color: #f8edf6; /* very light shade near #1e123a */
 }
 
 .sidebarItem.active {
-  background-color: #f0d6eb; /* light shade blend of #6f1f5f */
-  color: #6f1f5f;
+  background-color: #f0d6eb; /* light shade blend of #1e123a */
+  color: #1e123a;
   font-weight: bold;
   margin: 0;
-  border-left: 3px solid #6f1f5f;
+  border-left: 3px solid #1e123a;
 }
 
 /* Icon styling */
@@ -62,7 +62,7 @@
 /* Main content area */
 .settingsContent {
   flex: 1;
-  width: 87% !important;
+  width: 83% !important;
   padding: 16px;
   overflow-y: auto;
 }

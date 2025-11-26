@@ -88,7 +88,7 @@ const ControlPanel: React.FC = () => {
   ];
 
   return (
-    <div className="p-3 w-screen min-h-screen flex flex-col bg-[radial-gradient(circle_at_20%_30%,#9f7ae3,#6d4bb3,#3e2c56)] text-white">
+    <div className="p-3 w-screen min-h-screen flex flex-col bg-[radial-gradient(circle_at_20%_30%,#1a0f2f,#2d1d64,#3e2c56)] text-white">
       <div className="flex justify-between items-center px-4">
         <p className="font-bold text-lg">Logo</p>
         <p className="font-bold text-xl uppercase">Snehalayaa ERP</p>
@@ -113,7 +113,7 @@ const ControlPanel: React.FC = () => {
                   h-48 w-48 md:h-40 md:w-40
                 "
               >
-                <div className="flex justify-center items-center h-full text-[#422f5f]">
+                <div className="flex justify-center items-center h-full text-[#1a0f2f]">
                   {item.icon}
                 </div>
               </div>
