@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Boxes,
@@ -16,75 +17,104 @@ import {
 } from "lucide-react";
 
 const ControlPanel: React.FC = () => {
+  const navigate = useNavigate();
+
   const elements = [
     {
       name: "Dashboard",
-      icon: <LayoutDashboard className="w-20 h-20" />,
+      route: "/dashboard",
+      icon: <LayoutDashboard className="w-24 h-24 md:w-20 md:h-20" />,
     },
-    { name: "Inventory", icon: <Boxes className="w-20 h-20" /> },
+    {
+      name: "Inventory",
+      route: "/inventory",
+      icon: <Boxes className="w-24 h-24 md:w-20 md:h-20" />,
+    },
     {
       name: "Stock Transfers",
-      icon: <Repeat className="w-20 h-20" />,
+      route: "/stock-transfer",
+      icon: <Repeat className="w-24 h-24 md:w-20 md:h-20" />,
     },
     {
       name: "Image Upload",
-      icon: <Image className="w-20 h-20" />,
+      route: "/image-upload",
+      icon: <Image className="w-24 h-24 md:w-20 md:h-20" />,
     },
     {
       name: "Shopify",
-      icon: <ShoppingCart className="w-20 h-20" />,
+      route: "/shopify",
+      icon: <ShoppingCart className="w-24 h-24 md:w-20 md:h-20" />,
     },
     {
       name: "Catalogs",
-      icon: <BookOpen className="w-20 h-20" />,
+      route: "/catalogs",
+      icon: <BookOpen className="w-24 h-24 md:w-20 md:h-20" />,
     },
     {
       name: "Purchase Order",
-      icon: <ClipboardList className="w-20 h-20" />,
+      route: "/purchase-order",
+      icon: <ClipboardList className="w-24 h-24 md:w-20 md:h-20" />,
     },
     {
       name: "Debit Note",
-      icon: <BadgeDollarSign className="w-20 h-20" />,
+      route: "/debit-note",
+      icon: <BadgeDollarSign className="w-24 h-24 md:w-20 md:h-20" />,
     },
     {
       name: "Product Settings",
-      icon: <Settings className="w-20 h-20" />,
+      route: "/product-settings",
+      icon: <Settings className="w-24 h-24 md:w-20 md:h-20" />,
     },
-    { name: "Employees", icon: <Users className="w-20 h-20" /> },
+    {
+      name: "Employees",
+      route: "/employees",
+      icon: <Users className="w-24 h-24 md:w-20 md:h-20" />,
+    },
     {
       name: "Supplier & Customers",
-      icon: <UserCog className="w-20 h-20" />,
+      route: "/supplier-customers",
+      icon: <UserCog className="w-24 h-24 md:w-20 md:h-20" />,
     },
-    { name: "Attributes", icon: <Tag className="w-20 h-20" /> },
+    {
+      name: "Attributes",
+      route: "/attributes",
+      icon: <Tag className="w-24 h-24 md:w-20 md:h-20" />,
+    },
     {
       name: "Branches",
-      icon: <Building2 className="w-20 h-20" />,
+      route: "/branches",
+      icon: <Building2 className="w-24 h-24 md:w-20 md:h-20" />,
     },
   ];
 
   return (
-    <div className="p-3 w-screen h-screen bg-gradient-to-bl from-[#8e68ca] to-[#3e2c56] text-white">
+    <div className="p-3 w-screen min-h-screen flex flex-col bg-gradient-to-bl from-[#8e68ca] to-[#3e2c56] text-white">
       {/* Header */}
       <div className="flex justify-between items-center px-4">
         <p className="font-bold text-lg">Logo</p>
+        <p className="font-bold text-xl uppercase">Snehalayaa ERP</p>
         <p className="font-semibold">Profile</p>
       </div>
 
-      {/* Centered Grid Section */}
-      <div className="flex justify-center items-center min-h-[80vh]">
-        <div className="erp-grid gap-5">
+      {/* Remaining height filled by GRID */}
+      <div className="flex-1 w-full flex justify-center items-center py-6">
+        <div className="erp-grid gap-4 px-4 md:px-10">
           {elements.map((item, index) => (
-            <div key={index} className="flex flex-col items-center">
+            <div
+              key={index}
+              className="flex flex-col items-center cursor-pointer"
+              onClick={() => navigate(item.route)}
+            >
               <div
                 className="
-                  bg-white shadow-md rounded-xl p-6 cursor-pointer
+                  bg-white shadow-md rounded-xl
                   flex flex-col items-center justify-center
                   hover:shadow-xl hover:-translate-y-1
-                  transition-all duration-200 
-                  h-36 w-36
+                  transition-all duration-200
+                  h-48 w-48 md:h-40 md:w-40
                 "
               >
-                <div className="flex justify-center items-center h-full text-black">
+                <div className="flex justify-center items-center h-full text-[#3e2c56]">
                   {item.icon}
                 </div>
               </div>
