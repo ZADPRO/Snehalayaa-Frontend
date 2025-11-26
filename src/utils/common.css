@@ -262,6 +262,11 @@ Specificity: (0,2,2)
   font-weight: bold;
 }
 
+.p-dialog-title {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
 .p-button-primary.p-button.p-component .p-button-label.p-c {
   text-align: center;
 }

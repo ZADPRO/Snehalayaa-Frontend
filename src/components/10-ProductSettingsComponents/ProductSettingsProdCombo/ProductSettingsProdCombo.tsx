@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { Button } from "primereact/button";
-import { Sidebar } from "primereact/sidebar";
+import { Dialog } from "primereact/dialog";
 
 import {
   FileSpreadsheet,
@@ -13,16 +13,16 @@ import {
   Trash2,
 } from "lucide-react";
 
+import AddEditSettingsProducts from "./AddEditSettingsProducts/AddEditSettingsProducts";
+
 const ProductSettingsProdCombo: React.FC = () => {
-  const [addEditProductSidebar, setAddEditProductSidebar] = useState(false);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const dt = useRef(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const dt = useRef<DataTable<any>>(null);
 
-  const tableData: any = [];
+  const tableData: any[] = [];
 
-  const exportCSV = () => {
-    dt.current?.exportCSV();
-  };
+  const exportCSV = () => dt.current?.exportCSV();
 
   const exportExcel = () => {
     import("xlsx").then((xlsx) => {
@@ -32,6 +32,7 @@ const ProductSettingsProdCombo: React.FC = () => {
         bookType: "xlsx",
         type: "array",
       });
+
       saveFile(
         excelBuffer,
         "Products.xlsx",
@@ -42,7 +43,7 @@ const ProductSettingsProdCombo: React.FC = () => {
 
   const exportPDF = () => {};
 
-  const saveFile = (buffer, fileName, type) => {
+  const saveFile = (buffer: any, fileName: string, type: string) => {
     const blob = new Blob([buffer], { type });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -77,7 +78,7 @@ const ProductSettingsProdCombo: React.FC = () => {
 
       <div className="flex gap-2">
         <Button
-          onClick={() => setAddEditProductSidebar(true)}
+          onClick={() => setShowDialog(true)}
           className="p-button-success"
           tooltip="Add"
           icon={<Plus size={16} />}
@@ -100,7 +101,6 @@ const ProductSettingsProdCombo: React.FC = () => {
 
   return (
     <div>
-      {/* DATATABLE */}
       <DataTable
         ref={dt}
         value={tableData}
@@ -120,21 +120,23 @@ const ProductSettingsProdCombo: React.FC = () => {
         <Column field="subCategories" header="Sub Categories" />
         <Column field="hsn" header="HSN Code" />
         <Column field="tax" header="Tax %" />
+        <Column field="productCode" header="Product Code" />
         <Column field="createdAt" header="Created At" />
         <Column field="createdBy" header="Created By" />
         <Column field="updatedAt" header="Updated At" />
         <Column field="updatedBy" header="Updated By" />
       </DataTable>
 
-      <Sidebar
-        visible={addEditProductSidebar}
-        position="right"
-        onHide={() => setAddEditProductSidebar(false)}
-        className="w-full md:w-4"
+      <Dialog
+        header="Add / Edit Product"
+        visible={showDialog}
+        maximizable
+        modal
+        className="w-[60vw] sm:w-[80vw]"
+        onHide={() => setShowDialog(false)}
       >
-        <h2 className="font-bold text-lg mb-4">Add Product Combo</h2>
-        <p>Form fields will appear here.</p>
-      </Sidebar>
+        <AddEditSettingsProducts />
+      </Dialog>
     </div>
   );
 };
