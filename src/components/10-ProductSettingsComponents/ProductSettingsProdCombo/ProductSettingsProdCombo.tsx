@@ -17,7 +17,10 @@ import {
 } from "lucide-react";
 
 import AddEditSettingsProducts from "./AddEditSettingsProducts/AddEditSettingsProducts";
-import { getProducts } from "./ProductSettingsProdCombo.function";
+import {
+  deleteProducts,
+  getProducts,
+} from "./ProductSettingsProdCombo.function";
 
 const ProductSettingsProdCombo: React.FC = () => {
   const dt = useRef<DataTable<any>>(null);
@@ -31,7 +34,48 @@ const ProductSettingsProdCombo: React.FC = () => {
   const isSingleSelected = selectedRows.length === 1;
   const isAnySelected = selectedRows.length > 0;
 
-  /** Left Toolbar */
+  const handleDelete = async () => {
+    try {
+      const ids = selectedRows.map((row) => row.id);
+
+      if (ids.length === 0) {
+        toast.current?.show({
+          severity: "warn",
+          summary: "Delete",
+          detail: "Please select at least one product",
+        });
+        return;
+      }
+
+      if (
+        !window.confirm("Are you sure you want to delete selected products?")
+      ) {
+        return;
+      }
+
+      const result = await deleteProducts(ids);
+
+      toast.current?.show({
+        severity: "success",
+        summary: "Deleted",
+        detail: "Products deleted successfully",
+      });
+
+      if (result?.token) {
+        localStorage.setItem("token", result.token);
+      }
+
+      setSelectedRows([]);
+      loadProducts(); // Refresh table
+    } catch (err: any) {
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: err.response?.data?.message || "Failed to delete products",
+      });
+    }
+  };
+
   const leftToolbarTemplate = () => (
     <div className="flex gap-2">
       <Button
@@ -63,18 +107,11 @@ const ProductSettingsProdCombo: React.FC = () => {
         tooltip="Delete Product"
         tooltipOptions={{ position: "left" }}
         disabled={!isAnySelected}
-        onClick={() => {
-          toast.current?.show({
-            severity: "warn",
-            summary: "Delete",
-            detail: "Delete API not connected yet",
-          });
-        }}
+        onClick={handleDelete}
       />
     </div>
   );
 
-  /** Right Toolbar */
   const rightToolbarTemplate = () => (
     <div className="flex gap-2 items-center">
       <span className="font-medium pr-5">
@@ -103,7 +140,6 @@ const ProductSettingsProdCombo: React.FC = () => {
     try {
       const data = await getProducts();
 
-      // Add serial number (S.No)
       const mapped = data.map((item: any, index: number) => ({
         sno: index + 1,
         ...item,
@@ -117,6 +153,10 @@ const ProductSettingsProdCombo: React.FC = () => {
         detail: err.message || "Failed to load products",
       });
     }
+  };
+
+  const formatValue = (value: any) => {
+    return value === null || value === undefined || value === "" ? "-" : value;
   };
 
   useEffect(() => {
@@ -134,7 +174,6 @@ const ProductSettingsProdCombo: React.FC = () => {
       />
       <Tooltip target=".p-button" position="left" />
 
-      {/* TABLE */}
       <DataTable
         ref={dt}
         value={tableData}
@@ -142,23 +181,70 @@ const ProductSettingsProdCombo: React.FC = () => {
         scrollable
         stripedRows
         selectionMode="checkbox"
+        paginator
+        rows={15}
+        rowsPerPageOptions={[15, 30, 50]}
         selection={selectedRows}
         onSelectionChange={(e) => setSelectedRows(e.value)}
         dataKey="id"
       >
-        <Column selectionMode="multiple" headerStyle={{ width: "3rem" }} />
+        <Column
+          selectionMode="multiple"
+          headerClassName="align-start-header"
+          headerStyle={{ textAlign: "center", justifyContent: "flex-start" }}
+        />
 
-        <Column field="sno" header="S.No" />
-        <Column field="productName" header="Product Name" />
-        <Column field="categoryName" header="Category" />
-        <Column field="subCategoryName" header="Sub Category" />
-        <Column field="hsnCode" header="HSN Code" />
-        <Column field="taxPercentage" header="Tax %" />
-        <Column field="productCode" header="Product Code" />
-        <Column field="createdAt" header="Created At" />
-        <Column field="createdBy" header="Created By" />
-        <Column field="updatedAt" header="Updated At" />
-        <Column field="updatedBy" header="Updated By" />
+        <Column field="sno" header="S.No" body={(r) => formatValue(r.sno)} />
+        <Column
+          field="productName"
+          header="Product Name"
+          body={(r) => formatValue(r.productName)}
+        />
+        <Column
+          field="categoryName"
+          header="Category"
+          body={(r) => formatValue(r.categoryName)}
+        />
+        <Column
+          field="subCategoryName"
+          header="Sub Category"
+          body={(r) => formatValue(r.subCategoryName)}
+        />
+        <Column
+          field="hsnCode"
+          header="HSN Code"
+          body={(r) => formatValue(r.hsnCode)}
+        />
+        <Column
+          field="taxPercentage"
+          header="Tax %"
+          body={(r) => formatValue(r.taxPercentage)}
+        />
+        <Column
+          field="productCode"
+          header="Product Code"
+          body={(r) => formatValue(r.productCode)}
+        />
+        <Column
+          field="createdAt"
+          header="Created At"
+          body={(r) => formatValue(r.createdAt)}
+        />
+        <Column
+          field="createdBy"
+          header="Created By"
+          body={(r) => formatValue(r.createdBy)}
+        />
+        <Column
+          field="updatedAt"
+          header="Updated At"
+          body={(r) => formatValue(r.updatedAt)}
+        />
+        <Column
+          field="updatedBy"
+          header="Updated By"
+          body={(r) => formatValue(r.updatedBy)}
+        />
       </DataTable>
 
       <Sidebar

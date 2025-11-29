@@ -25,6 +25,7 @@ const AddEditSettingsProducts: React.FC<AddEditSettingsProductsProps> = ({
   onClose,
   reloadData,
 }) => {
+  console.log("selectedProduct", selectedProduct);
   const toast = useRef<Toast>(null);
   const taxOptions = [
     { label: "0%", value: "0" },
@@ -78,8 +79,8 @@ const AddEditSettingsProducts: React.FC<AddEditSettingsProductsProps> = ({
         categoryId: selectedProduct.categoryId ?? null,
         subCategoryId: selectedProduct.subCategoryId ?? null,
         productName: selectedProduct.productName ?? "",
-        hsn: selectedProduct.hsn ?? "",
-        tax: selectedProduct.tax ?? "",
+        hsn: selectedProduct.hsnCode ?? "",
+        tax: selectedProduct.taxPercentage ?? "",
         productCode: selectedProduct.productCode ?? "",
       });
 
@@ -132,7 +133,7 @@ const AddEditSettingsProducts: React.FC<AddEditSettingsProductsProps> = ({
         return;
       }
 
-      const payload = {
+      const payload: any = {
         categoryId: form.categoryId,
         subCategoryId: form.subCategoryId,
         productName: form.productName.trim(),
@@ -144,8 +145,7 @@ const AddEditSettingsProducts: React.FC<AddEditSettingsProductsProps> = ({
       let result;
 
       if (selectedProduct) {
-        console.log("selectedProduct", selectedProduct);
-        // payload.id = selectedProduct.id; // now allowed ✔
+        payload.id = selectedProduct.id;
 
         result = await updateProduct(payload);
 
@@ -191,6 +191,7 @@ const AddEditSettingsProducts: React.FC<AddEditSettingsProductsProps> = ({
             placeholder="Select Category"
             value={form.categoryId}
             options={categories}
+            filter
             optionLabel="categoryName"
             optionValue="refCategoryId"
             onChange={(e) => handleCategoryChange(e.value)}
@@ -207,6 +208,7 @@ const AddEditSettingsProducts: React.FC<AddEditSettingsProductsProps> = ({
               label: s.subCategoryName,
               value: s.refSubCategoryId,
             }))}
+            filter
             onChange={(e) => updateForm("subCategoryId", e.value)}
           />
         </div>

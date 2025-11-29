@@ -30,67 +30,69 @@ const ControlPanel: React.FC = () => {
     {
       name: "Dashboard",
       route: "/dashboard",
-      icon: <LayoutDashboard size={52} className="icon-spin" />,
+      icon: <LayoutDashboard size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Inventory",
       route: "/inventory",
-      icon: <Box size={52} className="icon-spin" />,
+      icon: <Box size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Stock Transfers",
       route: "/stock-transfer",
-      icon: <ArrowLeftRight size={52} className="icon-spin" />,
+      icon: <ArrowLeftRight size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Image Upload",
       route: "/image-upload",
-      icon: <ImageUp size={52} className="icon-spin" />,
+      icon: <ImageUp size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Shopify",
       route: "/shopify",
-      icon: <ShoppingBag size={52} className="icon-spin" />,
+      icon: <ShoppingBag size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Catalogs",
       route: "/catalogs",
-      icon: <ListCheck size={52} className="icon-spin" />,
+      icon: <ListCheck size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Purchase Order",
       route: "/purchase-order",
-      icon: <ShoppingCart size={52} className="icon-spin" />,
+      icon: <ShoppingCart size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Debit Note",
       route: "/debit-note",
-      icon: <BanknoteArrowDown size={52} className="icon-spin" />,
+      icon: (
+        <BanknoteArrowDown size={52} className="icon-spin" strokeWidth={1} />
+      ),
     },
     {
       name: "Product Settings",
       route: "/product-settings",
-      icon: <Bolt size={52} className="icon-spin" />,
+      icon: <Bolt size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Employees",
       route: "/employees",
-      icon: <IdCardLanyard size={52} className="icon-spin" />,
+      icon: <IdCardLanyard size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Suppliers & Customers",
       route: "/supplier-customers",
-      icon: <UserStar size={52} className="icon-spin" />,
+      icon: <UserStar size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Attributes",
       route: "/attributes",
-      icon: <ListPlus size={52} className="icon-spin" />,
+      icon: <ListPlus size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Branches",
       route: "/branches",
-      icon: <Split size={52} className="icon-spin" />,
+      icon: <Split size={52} className="icon-spin" strokeWidth={1} />,
     },
   ];
 
