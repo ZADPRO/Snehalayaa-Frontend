@@ -6,19 +6,19 @@ import snehalayaaLogo from "../../assets/logo/logo1.png";
 
 import {
   LayoutDashboard,
-  Boxes,
-  Repeat,
-  Image,
   ShoppingCart,
-  BookOpen,
-  ClipboardList,
-  BadgeDollarSign,
-  Settings,
-  Users,
-  UserCog,
-  Tag,
-  Building2,
   User,
+  Box,
+  ArrowLeftRight,
+  ImageUp,
+  ShoppingBag,
+  ListCheck,
+  BanknoteArrowDown,
+  Bolt,
+  IdCardLanyard,
+  ListPlus,
+  Split,
+  UserStar,
 } from "lucide-react";
 
 const ControlPanel: React.FC = () => {
@@ -41,7 +41,7 @@ const ControlPanel: React.FC = () => {
       name: "Inventory",
       route: "/inventory",
       icon: (
-        <Boxes
+        <Box
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -53,7 +53,7 @@ const ControlPanel: React.FC = () => {
       name: "Stock Transfers",
       route: "/stock-transfer",
       icon: (
-        <Repeat
+        <ArrowLeftRight
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -65,7 +65,7 @@ const ControlPanel: React.FC = () => {
       name: "Image Upload",
       route: "/image-upload",
       icon: (
-        <Image
+        <ImageUp
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -77,7 +77,7 @@ const ControlPanel: React.FC = () => {
       name: "Shopify",
       route: "/shopify",
       icon: (
-        <ShoppingCart
+        <ShoppingBag
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -89,7 +89,7 @@ const ControlPanel: React.FC = () => {
       name: "Catalogs",
       route: "/catalogs",
       icon: (
-        <BookOpen
+        <ListCheck
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -101,7 +101,7 @@ const ControlPanel: React.FC = () => {
       name: "Purchase Order",
       route: "/purchase-order",
       icon: (
-        <ClipboardList
+        <ShoppingCart
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -113,7 +113,7 @@ const ControlPanel: React.FC = () => {
       name: "Debit Note",
       route: "/debit-note",
       icon: (
-        <BadgeDollarSign
+        <BanknoteArrowDown
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -125,7 +125,7 @@ const ControlPanel: React.FC = () => {
       name: "Product Settings",
       route: "/product-settings",
       icon: (
-        <Settings
+        <Bolt
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -137,7 +137,7 @@ const ControlPanel: React.FC = () => {
       name: "Employees",
       route: "/employees",
       icon: (
-        <Users
+        <IdCardLanyard
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -146,10 +146,10 @@ const ControlPanel: React.FC = () => {
       ),
     },
     {
-      name: "Supplier & Customers",
+      name: "Suppliers & Customers",
       route: "/supplier-customers",
       icon: (
-        <UserCog
+        <UserStar
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -161,7 +161,7 @@ const ControlPanel: React.FC = () => {
       name: "Attributes",
       route: "/attributes",
       icon: (
-        <Tag
+        <ListPlus
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -173,7 +173,7 @@ const ControlPanel: React.FC = () => {
       name: "Branches",
       route: "/branches",
       icon: (
-        <Building2
+        <Split
           size={52}
           stroke="currentColor"
           strokeWidth={1}
@@ -194,17 +194,26 @@ const ControlPanel: React.FC = () => {
         backgroundPosition: "center",
       }}
     >
-      <div className="flex justify-between items-center px-4 py-2">
+      <div className="relative flex items-center px-4 py-2">
         <img src={snehalayaaLogo} alt="Snehalayaa Logo" className="h-[80px]" />
 
-        <p className="font-bold text-xl uppercase" style={{ color: "#6f1e60" }}>
+        <p
+          className="
+            absolute left-1/2 top-1/2 
+            -translate-x-1/2 -translate-y-1/2
+            font-bold text-xl uppercase
+          "
+          style={{ color: "#6f1e60" }}
+        >
           Snehalayaa ERP
         </p>
 
-        <User size={32} color="#6f1e60" />
+        <div className="ml-auto">
+          <User size={32} color="#6f1e60" />
+        </div>
       </div>
 
-      <div className="flex-1 w-full flex justify-center items-center py-3">
+      <div className="flex-1 w-full flex justify-center items-center py-3 mt-[-60px]">
         <div className="erp-grid gap-2 md:px-10">
           {elements.map((item, index) => (
             <div
@@ -216,7 +225,7 @@ const ControlPanel: React.FC = () => {
                 className="
                   relative bg-white rounded-xl border border-[#6f1e60]/60
                   flex flex-col items-center justify-center
-                  h-44 w-44
+                  h-40 w-44
                   overflow-hidden
                 "
               >
@@ -235,7 +244,7 @@ const ControlPanel: React.FC = () => {
                   })}
                 </div>
 
-                <p className="relative z-10 text-center transition-colors duration-300 group-hover:text-white text-[#6f1e60]">
+                <p className="relative text-sm z-10 text-center transition-colors duration-300 group-hover:text-white text-[#6f1e60]">
                   {item.name}
                 </p>
               </div>
