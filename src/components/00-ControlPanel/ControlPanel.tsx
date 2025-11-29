@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import backgroundImage from "../../assets/background/bg.png";
 import snehalayaaLogo from "../../assets/logo/logo1.png";
 
+import "./ControlPanel.css";
+
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -28,158 +30,67 @@ const ControlPanel: React.FC = () => {
     {
       name: "Dashboard",
       route: "/dashboard",
-      icon: (
-        <LayoutDashboard
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <LayoutDashboard size={52} className="icon-spin" />,
     },
     {
       name: "Inventory",
       route: "/inventory",
-      icon: (
-        <Box
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <Box size={52} className="icon-spin" />,
     },
     {
       name: "Stock Transfers",
       route: "/stock-transfer",
-      icon: (
-        <ArrowLeftRight
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <ArrowLeftRight size={52} className="icon-spin" />,
     },
     {
       name: "Image Upload",
       route: "/image-upload",
-      icon: (
-        <ImageUp
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <ImageUp size={52} className="icon-spin" />,
     },
     {
       name: "Shopify",
       route: "/shopify",
-      icon: (
-        <ShoppingBag
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <ShoppingBag size={52} className="icon-spin" />,
     },
     {
       name: "Catalogs",
       route: "/catalogs",
-      icon: (
-        <ListCheck
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <ListCheck size={52} className="icon-spin" />,
     },
     {
       name: "Purchase Order",
       route: "/purchase-order",
-      icon: (
-        <ShoppingCart
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <ShoppingCart size={52} className="icon-spin" />,
     },
     {
       name: "Debit Note",
       route: "/debit-note",
-      icon: (
-        <BanknoteArrowDown
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <BanknoteArrowDown size={52} className="icon-spin" />,
     },
     {
       name: "Product Settings",
       route: "/product-settings",
-      icon: (
-        <Bolt
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <Bolt size={52} className="icon-spin" />,
     },
     {
       name: "Employees",
       route: "/employees",
-      icon: (
-        <IdCardLanyard
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <IdCardLanyard size={52} className="icon-spin" />,
     },
     {
       name: "Suppliers & Customers",
       route: "/supplier-customers",
-      icon: (
-        <UserStar
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <UserStar size={52} className="icon-spin" />,
     },
     {
       name: "Attributes",
       route: "/attributes",
-      icon: (
-        <ListPlus
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <ListPlus size={52} className="icon-spin" />,
     },
     {
       name: "Branches",
       route: "/branches",
-      icon: (
-        <Split
-          size={52}
-          stroke="currentColor"
-          strokeWidth={1}
-          className="text-[#6f1e60]"
-        />
-      ),
+      icon: <Split size={52} className="icon-spin" />,
     },
   ];
 
@@ -190,8 +101,6 @@ const ControlPanel: React.FC = () => {
         backgroundColor: "#f5f5f5",
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: "cover",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
       }}
     >
       <div className="relative flex items-center px-4 py-2">
@@ -205,7 +114,7 @@ const ControlPanel: React.FC = () => {
           "
           style={{ color: "#6f1e60" }}
         >
-          Snehalayaa ERP
+          Snehalayaa ERP - Control Panel
         </p>
 
         <div className="ml-auto">
@@ -225,8 +134,7 @@ const ControlPanel: React.FC = () => {
                 className="
                   relative bg-white rounded-xl border border-[#6f1e60]/60
                   flex flex-col items-center justify-center
-                  h-40 w-44
-                  overflow-hidden
+                  h-40 w-44 overflow-hidden
                 "
               >
                 <div className="absolute bottom-0 left-0 w-full h-0 bg-[#6f1e60] transition-all duration-500 ease-in-out group-hover:h-full"></div>
@@ -234,17 +142,17 @@ const ControlPanel: React.FC = () => {
                 <div
                   className="
                     relative z-10 flex justify-center items-center mt-3 mb-3
-                    transition-colors duration-300
-                    group-hover:text-white text-[#6f1e60]
+                    text-[#6f1e60]
+                    group-hover:text-white 
+                    transition duration-300
                   "
                 >
                   {React.cloneElement(item.icon, {
-                    className:
-                      "transition-colors duration-300 group-hover:text-white text-[#6f1e60]",
+                    className: `${item.icon.props.className}`,
                   })}
                 </div>
 
-                <p className="relative text-sm z-10 text-center transition-colors duration-300 group-hover:text-white text-[#6f1e60]">
+                <p className="relative text-sm z-10 text-center group-hover:text-white">
                   {item.name}
                 </p>
               </div>

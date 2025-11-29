@@ -1,0 +1,67 @@
+/* SPIN */
+.icon-spin {
+  transition: transform 0.5s ease;
+}
+.group:hover .icon-spin {
+  transform: rotate(360deg);
+}
+
+/* SHAKE */
+.icon-shake {
+  transition: transform 0.2s ease;
+}
+.group:hover .icon-shake {
+  animation: shake 0.4s ease-in-out;
+}
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-4px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* BOUNCE */
+.icon-bounce {
+  transition: transform 0.3s ease;
+}
+.group:hover .icon-bounce {
+  transform: translateY(-8px);
+}
+
+/* FLOAT */
+.icon-float {
+  transition: transform 0.6s ease-in-out;
+}
+.group:hover .icon-float {
+  animation: float 1.2s infinite ease-in-out;
+}
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* PULSE */
+.icon-pulse {
+  transition: transform 0.3s ease;
+}
+.group:hover .icon-pulse {
+  transform: scale(1.2);
+}
