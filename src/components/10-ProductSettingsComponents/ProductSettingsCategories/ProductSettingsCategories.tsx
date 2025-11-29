@@ -25,6 +25,7 @@ import {
   fetchCategories,
 } from "./ProductSettingsCategories.function";
 import { ConfirmDialog } from "primereact/confirmdialog";
+import AddEditSettingsCategories from "./AddEditSettingsCategories/AddEditSettingsCategories";
 
 const ProductSettingsCategories: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -261,14 +262,14 @@ const ProductSettingsCategories: React.FC = () => {
         }}
         style={{ width: "50vw" }}
       >
-        {/* <SettingsAddEditCategories
+        <AddEditSettingsCategories
           selectedCategory={selectedCategory}
           onClose={() => {
             setVisibleRight(false);
             setSelectedCategories([]);
           }}
           reloadData={load}
-        /> */}
+        />
       </Sidebar>
       <ConfirmDialog
         visible={showForceDialog}
