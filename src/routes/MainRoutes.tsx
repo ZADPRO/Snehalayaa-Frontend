@@ -12,6 +12,10 @@ import PurchaseOrder from "../pages/08-PurchaseOrder/PurchaseOrder";
 import DebitNote from "../pages/09-DebitNote/DebitNote";
 import ProductSettings from "../pages/10-ProductSettings/ProductSettings";
 import ForgotPassword from "../pages/01-Login/ForgotPassword";
+import Employees from "../pages/11-Employees/Employees";
+import SupplierCustomers from "../pages/12-SupplierCustomers/SupplierCustomers";
+import Attributes from "../pages/13-Attributes/Attributes";
+import Branches from "../pages/14-Branches/Branches";
 
 const MainRoutes: React.FC = () => {
   return (
@@ -31,6 +35,10 @@ const MainRoutes: React.FC = () => {
         <Route path="/purchase-order" element={<PurchaseOrder />} />
         <Route path="/debit-note" element={<DebitNote />} />
         <Route path="/product-settings" element={<ProductSettings />} />
+        <Route path="/employees" element={<Employees />} />
+        <Route path="/supplier-customers" element={<SupplierCustomers />} />
+        <Route path="/attributes" element={<Attributes />} />
+        <Route path="/branches" element={<Branches />} />
       </Routes>
     </div>
   );

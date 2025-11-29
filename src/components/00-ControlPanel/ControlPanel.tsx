@@ -20,7 +20,8 @@ import {
   IdCardLanyard,
   ListPlus,
   Split,
-  UserStar,
+  Trophy,
+  // UserStar,
 } from "lucide-react";
 
 const ControlPanel: React.FC = () => {
@@ -74,15 +75,15 @@ const ControlPanel: React.FC = () => {
       route: "/product-settings",
       icon: <Bolt size={52} className="icon-spin" strokeWidth={1} />,
     },
+    // {
+    //   name: "Employees",
+    //   route: "/employees",
+    //   icon: <IdCardLanyard size={52} className="icon-spin" strokeWidth={1} />,
+    // },
     {
-      name: "Employees",
-      route: "/employees",
-      icon: <IdCardLanyard size={52} className="icon-spin" strokeWidth={1} />,
-    },
-    {
-      name: "Suppliers & Customers",
+      name: "Users",
       route: "/supplier-customers",
-      icon: <UserStar size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <IdCardLanyard size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Attributes",
@@ -93,6 +94,11 @@ const ControlPanel: React.FC = () => {
       name: "Branches",
       route: "/branches",
       icon: <Split size={52} className="icon-spin" strokeWidth={1} />,
+    },
+    {
+      name: "Nivas",
+      route: "/nivas",
+      icon: <Trophy size={52} className="icon-spin" strokeWidth={1} />,
     },
   ];
 

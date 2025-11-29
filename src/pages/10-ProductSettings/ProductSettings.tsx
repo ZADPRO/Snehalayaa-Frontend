@@ -3,12 +3,8 @@ import {
   FolderKanban,
   FolderTree,
   Package,
-  // BadgeCheck,
   Palette,
   Shapes,
-  // Layers,
-  // Droplets,
-  // Ruler,
   User,
 } from "lucide-react";
 
@@ -41,12 +37,6 @@ const sidebarItems = [
     icon: <Package size={20} />,
     component: <ProductSettingsProdCombo />,
   },
-  // {
-  //   key: "brand",
-  //   label: "Brand",
-  //   icon: <BadgeCheck size={20} />,
-  //   component: <ProductSettingsCategories />,
-  // },
   {
     key: "variables",
     label: "Variable Attributes",
@@ -59,24 +49,6 @@ const sidebarItems = [
     icon: <Shapes size={20} />,
     component: <ProductSettingsPatternVarient />,
   },
-  // {
-  //   key: "varient",
-  //   label: "Varient",
-  //   icon: <Layers size={20} />,
-  //   component: <ProductSettingsCategories />,
-  // },
-  // {
-  //   key: "color",
-  //   label: "Color",
-  //   icon: <Droplets size={20} />,
-  //   component: <ProductSettingsCategories />,
-  // },
-  // {
-  //   key: "size",
-  //   label: "Size",
-  //   icon: <Ruler size={20} />,
-  //   component: <ProductSettingsCategories />,
-  // },
 ];
 
 const ProductSettings: React.FC = () => {
