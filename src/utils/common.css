@@ -105,7 +105,8 @@ Specificity: (0,2,2)
   box-shadow: none;
 }
 
-.p-dropdown:not(.p-disabled).p-focus {
+.p-dropdown:not(.p-disabled).p-focus,
+.p-multiselect:not(.p-disabled).p-focus {
   box-shadow: none;
 }
 

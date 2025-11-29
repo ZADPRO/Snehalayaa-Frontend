@@ -6,7 +6,8 @@ import { Toolbar } from "primereact/toolbar";
 import { Toast } from "primereact/toast";
 import { Tooltip } from "primereact/tooltip";
 import { Sidebar } from "primereact/sidebar";
-import { Dropdown } from "primereact/dropdown";
+
+import { MultiSelect } from "primereact/multiselect";
 
 import {
   FileSignature,
@@ -38,9 +39,7 @@ const ProductSettingsSubCategories: React.FC = () => {
     null
   );
   const [loading, setLoading] = useState<boolean>(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
-    null
-  );
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
 
   const toast = useRef<Toast>(null);
   const dt = useRef<DataTable<SubCategory[]>>(null);
@@ -168,20 +167,28 @@ const ProductSettingsSubCategories: React.FC = () => {
         onClick={handleDelete}
       />
 
-      <Dropdown
-        value={selectedCategoryId}
-        placeholder="Select Category"
-        options={categories}
-        optionLabel="categoryName"
-        optionValue="refCategoryId"
-        onChange={(e) => setSelectedCategoryId(e.value)}
+      <MultiSelect
+        value={selectedCategoryIds}
+        options={categories.map((c) => ({
+          label: c.categoryName,
+          value: c.refCategoryId,
+        }))}
+        placeholder="Filter Categories"
+        onChange={(e) => setSelectedCategoryIds(e.value)}
+        display="chip"
+        className="w-60"
         showClear
       />
     </div>
   );
 
   const rightToolbarTemplate = () => (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center">
+      <span className="font-medium pr-5">
+        Total: {filteredSubCategories.length} | Selected:
+        {selectedSubCategories.length}
+      </span>
+
       <Button
         icon={<FileText size={16} strokeWidth={2} />}
         severity="secondary"
@@ -212,6 +219,13 @@ const ProductSettingsSubCategories: React.FC = () => {
     </div>
   );
 
+  const filteredSubCategories =
+    selectedCategoryIds.length > 0
+      ? subCategories.filter((s) =>
+          selectedCategoryIds.includes(s.refCategoryId)
+        )
+      : subCategories;
+
   return (
     <div>
       <Toast ref={toast} />
@@ -223,13 +237,7 @@ const ProductSettingsSubCategories: React.FC = () => {
       <Tooltip target=".p-button" position="left" />
 
       <DataTable
-        value={
-          selectedCategoryId
-            ? subCategories.filter(
-                (s) => s.refCategoryId === selectedCategoryId
-              )
-            : subCategories
-        }
+        value={filteredSubCategories}
         selection={selectedSubCategories}
         onSelectionChange={(e) =>
           setSelectedSubCategories(e.value as SubCategory[])
