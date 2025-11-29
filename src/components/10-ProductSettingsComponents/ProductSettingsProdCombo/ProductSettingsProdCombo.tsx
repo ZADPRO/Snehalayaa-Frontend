@@ -6,6 +6,7 @@ import { Toast } from "primereact/toast";
 import { Sidebar } from "primereact/sidebar";
 import { Toolbar } from "primereact/toolbar";
 import { Tooltip } from "primereact/tooltip";
+import { Dialog } from "primereact/dialog";
 
 import {
   FileSpreadsheet,
@@ -30,28 +31,46 @@ const ProductSettingsProdCombo: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [editRowData, setEditRowData] = useState<any | null>(null);
   const [tableData, setTableData] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Delete Dialog State
+  const [deleteDialogVisible, setDeleteDialogVisible] =
+    useState<boolean>(false);
 
   const isSingleSelected = selectedRows.length === 1;
   const isAnySelected = selectedRows.length > 0;
 
+  /** LOAD PRODUCTS */
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await getProducts();
+
+      const mapped = data.map((item: any, index: number) => ({
+        sno: index + 1,
+        ...item,
+      }));
+
+      setTableData(mapped);
+    } catch (err: any) {
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: err.message || "Failed to load products",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** DELETE ACTION */
+  const confirmDelete = () => {
+    setDeleteDialogVisible(true);
+  };
+
   const handleDelete = async () => {
     try {
       const ids = selectedRows.map((row) => row.id);
-
-      if (ids.length === 0) {
-        toast.current?.show({
-          severity: "warn",
-          summary: "Delete",
-          detail: "Please select at least one product",
-        });
-        return;
-      }
-
-      if (
-        !window.confirm("Are you sure you want to delete selected products?")
-      ) {
-        return;
-      }
 
       const result = await deleteProducts(ids);
 
@@ -66,7 +85,8 @@ const ProductSettingsProdCombo: React.FC = () => {
       }
 
       setSelectedRows([]);
-      loadProducts(); // Refresh table
+      setDeleteDialogVisible(false);
+      loadProducts();
     } catch (err: any) {
       toast.current?.show({
         severity: "error",
@@ -76,10 +96,19 @@ const ProductSettingsProdCombo: React.FC = () => {
     }
   };
 
+  /** FORMAT EMPTY VALUES */
+  const formatValue = (value: any) =>
+    value === null || value === undefined || value === "" ? "-" : value;
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  /** TOOLBAR LEFT */
   const leftToolbarTemplate = () => (
     <div className="flex gap-2">
       <Button
-        icon={<Plus size={16} strokeWidth={2} />}
+        icon={<Plus size={16} />}
         severity="success"
         tooltip="Add Product"
         tooltipOptions={{ position: "left" }}
@@ -90,7 +119,7 @@ const ProductSettingsProdCombo: React.FC = () => {
       />
 
       <Button
-        icon={<Pencil size={16} strokeWidth={2} />}
+        icon={<Pencil size={16} />}
         severity="info"
         tooltip="Edit Product"
         tooltipOptions={{ position: "left" }}
@@ -102,16 +131,17 @@ const ProductSettingsProdCombo: React.FC = () => {
       />
 
       <Button
-        icon={<Trash2 size={16} strokeWidth={2} />}
+        icon={<Trash2 size={16} />}
         severity="danger"
         tooltip="Delete Product"
         tooltipOptions={{ position: "left" }}
         disabled={!isAnySelected}
-        onClick={handleDelete}
+        onClick={confirmDelete}
       />
     </div>
   );
 
+  /** TOOLBAR RIGHT */
   const rightToolbarTemplate = () => (
     <div className="flex gap-2 items-center">
       <span className="font-medium pr-5">
@@ -136,33 +166,6 @@ const ProductSettingsProdCombo: React.FC = () => {
     </div>
   );
 
-  const loadProducts = async () => {
-    try {
-      const data = await getProducts();
-
-      const mapped = data.map((item: any, index: number) => ({
-        sno: index + 1,
-        ...item,
-      }));
-
-      setTableData(mapped);
-    } catch (err: any) {
-      toast.current?.show({
-        severity: "error",
-        summary: "Error",
-        detail: err.message || "Failed to load products",
-      });
-    }
-  };
-
-  const formatValue = (value: any) => {
-    return value === null || value === undefined || value === "" ? "-" : value;
-  };
-
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
   return (
     <div>
       <Toast ref={toast} />
@@ -180,7 +183,7 @@ const ProductSettingsProdCombo: React.FC = () => {
         showGridlines
         scrollable
         stripedRows
-        selectionMode="checkbox"
+        loading={loading}
         paginator
         rows={15}
         rowsPerPageOptions={[15, 30, 50]}
@@ -269,6 +272,29 @@ const ProductSettingsProdCombo: React.FC = () => {
           reloadData={() => {}}
         />
       </Sidebar>
+
+      <Dialog
+        header="Confirm Delete"
+        visible={deleteDialogVisible}
+        style={{ width: "30vw" }}
+        modal
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button
+              label="Cancel"
+              severity="secondary"
+              onClick={() => setDeleteDialogVisible(false)}
+            />
+            <Button label="Delete" severity="danger" onClick={handleDelete} />
+          </div>
+        }
+        onHide={() => setDeleteDialogVisible(false)}
+      >
+        <p className="m-0">
+          Are you sure you want to delete <b>{selectedRows.length}</b>{" "}
+          product(s)?
+        </p>
+      </Dialog>
     </div>
   );
 };

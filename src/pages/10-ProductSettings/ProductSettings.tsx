@@ -3,12 +3,12 @@ import {
   FolderKanban,
   FolderTree,
   Package,
-  BadgeCheck,
+  // BadgeCheck,
   Palette,
   Shapes,
-  Layers,
-  Droplets,
-  Ruler,
+  // Layers,
+  // Droplets,
+  // Ruler,
   User,
 } from "lucide-react";
 
@@ -19,6 +19,8 @@ import ProductSettingsSubCategories from "../../components/10-ProductSettingsCom
 import ProductSettingsProdCombo from "../../components/10-ProductSettingsComponents/ProductSettingsProdCombo/ProductSettingsProdCombo";
 
 import "./ProductSettings.css";
+import ProductSettingsDesignColorSize from "../../components/10-ProductSettingsComponents/ProductSettingsDesignColorSize/ProductSettingsDesignColorSize";
+import ProductSettingsPatternVarient from "../../components/10-ProductSettingsComponents/ProductSettingsPatternVarient/ProductSettingsPatternVarient";
 
 const sidebarItems = [
   {
@@ -39,46 +41,46 @@ const sidebarItems = [
     icon: <Package size={20} />,
     component: <ProductSettingsProdCombo />,
   },
+  // {
+  //   key: "brand",
+  //   label: "Brand",
+  //   icon: <BadgeCheck size={20} />,
+  //   component: <ProductSettingsCategories />,
+  // },
   {
-    key: "brand",
-    label: "Brand",
-    icon: <BadgeCheck size={20} />,
-    component: <ProductSettingsCategories />,
-  },
-  {
-    key: "design",
-    label: "Design",
+    key: "variables",
+    label: "Variable Attributes",
     icon: <Palette size={20} />,
-    component: <ProductSettingsCategories />,
+    component: <ProductSettingsDesignColorSize />,
   },
   {
     key: "pattern",
-    label: "Pattern",
+    label: "Pattern & Varients",
     icon: <Shapes size={20} />,
-    component: <ProductSettingsCategories />,
+    component: <ProductSettingsPatternVarient />,
   },
-  {
-    key: "varient",
-    label: "Varient",
-    icon: <Layers size={20} />,
-    component: <ProductSettingsCategories />,
-  },
-  {
-    key: "color",
-    label: "Color",
-    icon: <Droplets size={20} />,
-    component: <ProductSettingsCategories />,
-  },
-  {
-    key: "size",
-    label: "Size",
-    icon: <Ruler size={20} />,
-    component: <ProductSettingsCategories />,
-  },
+  // {
+  //   key: "varient",
+  //   label: "Varient",
+  //   icon: <Layers size={20} />,
+  //   component: <ProductSettingsCategories />,
+  // },
+  // {
+  //   key: "color",
+  //   label: "Color",
+  //   icon: <Droplets size={20} />,
+  //   component: <ProductSettingsCategories />,
+  // },
+  // {
+  //   key: "size",
+  //   label: "Size",
+  //   icon: <Ruler size={20} />,
+  //   component: <ProductSettingsCategories />,
+  // },
 ];
 
 const ProductSettings: React.FC = () => {
-  const [activeKey, setActiveKey] = useState("products");
+  const [activeKey, setActiveKey] = useState("categories");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Always scroll to left on resize
