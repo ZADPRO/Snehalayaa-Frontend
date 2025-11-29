@@ -1,113 +1,146 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { Button } from "primereact/button";
-import { Dialog } from "primereact/dialog";
+import { Toast } from "primereact/toast";
+import { Sidebar } from "primereact/sidebar";
+import { Toolbar } from "primereact/toolbar";
+import { Tooltip } from "primereact/tooltip";
 
 import {
   FileSpreadsheet,
-  FileDown,
   FileText,
   Plus,
   Pencil,
   Trash2,
+  FileSignature,
 } from "lucide-react";
 
 import AddEditSettingsProducts from "./AddEditSettingsProducts/AddEditSettingsProducts";
+import { getProducts } from "./ProductSettingsProdCombo.function";
 
 const ProductSettingsProdCombo: React.FC = () => {
-  const [showDialog, setShowDialog] = useState(false);
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const dt = useRef<DataTable<any>>(null);
+  const toast = useRef<Toast>(null);
 
-  const tableData: any[] = [];
+  const [visibleRight, setVisibleRight] = useState<boolean>(false);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [editRowData, setEditRowData] = useState<any | null>(null);
+  const [tableData, setTableData] = useState<any[]>([]);
 
-  const exportCSV = () => dt.current?.exportCSV();
+  const isSingleSelected = selectedRows.length === 1;
+  const isAnySelected = selectedRows.length > 0;
 
-  const exportExcel = () => {
-    import("xlsx").then((xlsx) => {
-      const worksheet = xlsx.utils.json_to_sheet(tableData);
-      const workbook = { Sheets: { data: worksheet }, SheetNames: ["data"] };
-      const excelBuffer = xlsx.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
+  /** Left Toolbar */
+  const leftToolbarTemplate = () => (
+    <div className="flex gap-2">
+      <Button
+        icon={<Plus size={16} strokeWidth={2} />}
+        severity="success"
+        tooltip="Add Product"
+        tooltipOptions={{ position: "left" }}
+        onClick={() => {
+          setEditRowData(null);
+          setVisibleRight(true);
+        }}
+      />
 
-      saveFile(
-        excelBuffer,
-        "Products.xlsx",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      );
-    });
-  };
+      <Button
+        icon={<Pencil size={16} strokeWidth={2} />}
+        severity="info"
+        tooltip="Edit Product"
+        tooltipOptions={{ position: "left" }}
+        disabled={!isSingleSelected}
+        onClick={() => {
+          setEditRowData(selectedRows[0]);
+          setVisibleRight(true);
+        }}
+      />
 
-  const exportPDF = () => {};
-
-  const saveFile = (buffer: any, fileName: string, type: string) => {
-    const blob = new Blob([buffer], { type });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    link.click();
-  };
-
-  const tableHeader = (
-    <div className="flex justify-between items-center w-full">
-      <div className="flex gap-2">
-        <Button
-          onClick={exportCSV}
-          className="p-button-outlined"
-          tooltip="Export CSV"
-          icon={<FileText size={18} />}
-        />
-
-        <Button
-          onClick={exportExcel}
-          className="p-button-outlined"
-          tooltip="Export Excel"
-          icon={<FileSpreadsheet size={18} />}
-        />
-
-        <Button
-          onClick={exportPDF}
-          className="p-button-outlined"
-          tooltip="Export PDF"
-          icon={<FileDown size={18} />}
-        />
-      </div>
-
-      <div className="flex gap-2">
-        <Button
-          onClick={() => setShowDialog(true)}
-          className="p-button-success"
-          tooltip="Add"
-          icon={<Plus size={16} />}
-        />
-
-        <Button
-          className="p-button-warning"
-          tooltip="Edit"
-          icon={<Pencil size={16} />}
-        />
-
-        <Button
-          className="p-button-danger"
-          tooltip="Delete"
-          icon={<Trash2 size={16} />}
-        />
-      </div>
+      <Button
+        icon={<Trash2 size={16} strokeWidth={2} />}
+        severity="danger"
+        tooltip="Delete Product"
+        tooltipOptions={{ position: "left" }}
+        disabled={!isAnySelected}
+        onClick={() => {
+          toast.current?.show({
+            severity: "warn",
+            summary: "Delete",
+            detail: "Delete API not connected yet",
+          });
+        }}
+      />
     </div>
   );
 
+  /** Right Toolbar */
+  const rightToolbarTemplate = () => (
+    <div className="flex gap-2 items-center">
+      <span className="font-medium pr-5">
+        Total: {tableData.length} | Selected: {selectedRows.length}
+      </span>
+
+      <Button
+        icon={<FileText size={16} />}
+        severity="secondary"
+        tooltip="Export CSV"
+      />
+      <Button
+        icon={<FileSpreadsheet size={16} />}
+        severity="success"
+        tooltip="Export Excel"
+      />
+      <Button
+        icon={<FileSignature size={16} />}
+        severity="danger"
+        tooltip="Export PDF"
+      />
+    </div>
+  );
+
+  const loadProducts = async () => {
+    try {
+      const data = await getProducts();
+
+      // Add serial number (S.No)
+      const mapped = data.map((item: any, index: number) => ({
+        sno: index + 1,
+        ...item,
+      }));
+
+      setTableData(mapped);
+    } catch (err: any) {
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: err.message || "Failed to load products",
+      });
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
   return (
     <div>
+      <Toast ref={toast} />
+
+      <Toolbar
+        className="mb-2"
+        left={leftToolbarTemplate}
+        right={rightToolbarTemplate}
+      />
+      <Tooltip target=".p-button" position="left" />
+
+      {/* TABLE */}
       <DataTable
         ref={dt}
         value={tableData}
         showGridlines
         scrollable
         stripedRows
-        header={tableHeader}
         selectionMode="checkbox"
         selection={selectedRows}
         onSelectionChange={(e) => setSelectedRows(e.value)}
@@ -117,10 +150,10 @@ const ProductSettingsProdCombo: React.FC = () => {
 
         <Column field="sno" header="S.No" />
         <Column field="productName" header="Product Name" />
-        <Column field="categories" header="Categories" />
-        <Column field="subCategories" header="Sub Categories" />
-        <Column field="hsn" header="HSN Code" />
-        <Column field="tax" header="Tax %" />
+        <Column field="categoryName" header="Category" />
+        <Column field="subCategoryName" header="Sub Category" />
+        <Column field="hsnCode" header="HSN Code" />
+        <Column field="taxPercentage" header="Tax %" />
         <Column field="productCode" header="Product Code" />
         <Column field="createdAt" header="Created At" />
         <Column field="createdBy" header="Created By" />
@@ -128,16 +161,28 @@ const ProductSettingsProdCombo: React.FC = () => {
         <Column field="updatedBy" header="Updated By" />
       </DataTable>
 
-      <Dialog
-        header="Add / Edit Product"
-        visible={showDialog}
-        maximizable
-        modal
-        className="w-[60vw] sm:w-[80vw]"
-        onHide={() => setShowDialog(false)}
+      <Sidebar
+        visible={visibleRight}
+        position="right"
+        header={editRowData ? "Edit Product" : "Add Product"}
+        style={{ width: "50vw" }}
+        onHide={() => {
+          setVisibleRight(false);
+          setEditRowData(null);
+          setSelectedRows([]);
+        }}
       >
-        <AddEditSettingsProducts />
-      </Dialog>
+        <AddEditSettingsProducts
+          selectedProduct={editRowData}
+          onClose={() => {
+            setVisibleRight(false);
+            setEditRowData(null);
+            setSelectedRows([]);
+            loadProducts();
+          }}
+          reloadData={() => {}}
+        />
+      </Sidebar>
     </div>
   );
 };

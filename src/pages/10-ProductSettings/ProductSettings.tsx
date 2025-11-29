@@ -78,7 +78,7 @@ const sidebarItems = [
 ];
 
 const ProductSettings: React.FC = () => {
-  const [activeKey, setActiveKey] = useState("categories");
+  const [activeKey, setActiveKey] = useState("products");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Always scroll to left on resize

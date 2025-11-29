@@ -177,7 +177,10 @@ const ProductSettingsCategories: React.FC = () => {
   );
 
   const rightToolbarTemplate = () => (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center">
+      <span className="font-medium pr-5">
+        Total: {categories.length} | Selected: {selectedCategories.length}
+      </span>
       <Button
         icon={<FileText size={16} strokeWidth={2} />}
         severity="secondary"
