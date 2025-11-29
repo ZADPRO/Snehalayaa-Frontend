@@ -11,6 +11,7 @@ import {
   Layers,
   Droplets,
   Ruler,
+  User,
 } from "lucide-react";
 
 import "./ProductSettings.css";
@@ -81,27 +82,40 @@ const ProductSettings: React.FC = () => {
     <div>
       <div className="settingsContainer">
         <div className="settingsMainColumn">
-          {/* Horizontal Sidebar */}
           <div className="settingsSidebarHorizontal">
-            {sidebarItems.map((item) => {
-              const isActive = item.key === activeKey;
-              return (
-                <div
-                  key={item.key}
-                  onClick={() => setActiveKey(item.key)}
-                  className={`sidebarItemHorizontal ${
-                    isActive ? "active" : ""
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </div>
-              );
-            })}
+            <div className="sidebarLeft">
+              <button className="backBtn" onClick={() => window.history.back()}>
+                Back
+              </button>
+            </div>
+
+            <div className="sidebarCenter">
+              {sidebarItems.map((item) => {
+                const isActive = item.key === activeKey;
+                return (
+                  <div
+                    key={item.key}
+                    onClick={() => setActiveKey(item.key)}
+                    className={`sidebarItemHorizontal ${
+                      isActive ? "active" : ""
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="sidebarRight">
+              <div className="profileIcon">
+                <User size={32} color="#6f1e60" />
+              </div>
+            </div>
           </div>
 
           {/* Main Content */}
-          <div className="settingsContentFull">
+          <div className="settingsContentFull p-3">
             {sidebarItems.find((item) => item.key === activeKey)?.component}
           </div>
         </div>
