@@ -1,181 +1,90 @@
-.settingsContainer {
+.ps-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-.p-datatable-header {
-  padding: 10px;
-}
-
-.settingsMain {
-  flex: 1;
-  display: flex;
-  margin: 2px;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.settingsSidebar {
-  width: 17%;
-  padding: 10px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.sidebarItem {
+.ps-topbar {
   display: flex;
   align-items: center;
-  padding: 8px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  color: #444;
-  font-weight: 500;
-  border-left: 3px solid transparent;
-}
-
-.sidebarItem:hover {
-  background-color: #f8edf6; /* very light shade near #1e123a */
-}
-
-.sidebarItem.active {
-  background-color: #f0d6eb; /* light shade blend of #1e123a */
-  color: #1e123a;
-  font-weight: bold;
-  margin: 0;
-  border-left: 3px solid #1e123a;
-}
-
-/* Icon styling */
-.sidebar-icon {
-  margin-right: 12px;
-}
-
-/* Main content area */
-.settingsContent {
-  flex: 1;
-  width: 83% !important;
-  padding: 16px;
-  overflow-y: auto;
-}
-
-/* CATEGORIES */
-.p-toolbar.p-component {
-  padding: 10px;
-}
-
-.p-datatable-wrapper table thead tr th,
-.p-datatable-wrapper table tbody tr td {
-  padding: 10px;
-}
-
-.p-selection-column {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.settingsMainColumn {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.settingsSidebarHorizontal {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 10px;
-  white-space: nowrap;
+  justify-content: space-between;
   background: #fafafa;
-  border-bottom: 1px solid #eee;
-}
-
-/* Scrollbar hidden (optional) */
-.settingsSidebarHorizontal::-webkit-scrollbar {
-  height: 6px;
-}
-.settingsSidebarHorizontal::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 10px;
-}
-
-/* BASE STYLE */
-.sidebarItemHorizontal {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  cursor: pointer;
-  border-radius: 20px;
-  font-weight: 500;
-  transition: all 0.25s ease-in-out;
-  color: #444;
-  gap: 8px;
-}
-
-/* HOVER EFFECT */
-.sidebarItemHorizontal:hover {
-  background-color: #f4e6f1;
-  color: #6f1e60;
-}
-
-/* ACTIVE EFFECT */
-.sidebarItemHorizontal.active {
-  background-color: #6f1e60;
-  color: white;
-  box-shadow: 0 3px 8px rgba(111, 30, 96, 0.35);
-  border: 1px solid #5c1650;
-  transform: translateY(-1px);
-}
-
-/* ACTIVE ICON */
-.sidebarItemHorizontal.active svg {
-  color: white !important;
-}
-
-.settingsSidebarHorizontal {
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  background: #fafafa;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 15px;
   height: 70px;
+  gap: 10px;
 }
 
-.sidebarLeft {
-  width: 15%;
+/* LEFT AREA */
+.ps-left {
+  flex: 0 0 auto;
 }
 
-.backBtn {
+.ps-back-btn {
   background: none;
   border: none;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
   color: #6f1e60;
 }
 
-.sidebarCenter {
-  width: 70%;
+/* RIGHT AREA */
+.ps-right {
+  flex: 0 0 auto;
   display: flex;
-  justify-content: center;
+  align-items: center;
+}
+
+/* CENTER SCROLL AREA */
+.ps-center {
+  flex: 1;
   overflow-x: auto;
-  gap: 12px;
-}
-
-.sidebarRight {
-  width: 15%;
+  white-space: nowrap;
+  scrollbar-width: thin;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
 }
 
-.profileIcon {
-  font-size: 20px;
+.ps-center::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ps-center-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 15px;
+}
+
+/* TABS */
+.ps-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 20px;
   cursor: pointer;
+  transition: 0.2s;
+  color: #444;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ps-tab:hover {
+  background: #f4e6f1;
   color: #6f1e60;
+}
+
+/* ACTIVE TAB */
+.ps-tab.active {
+  background: #6f1e60;
+  color: #fff;
+  box-shadow: 0 3px 6px rgba(111, 30, 96, 0.3);
+}
+
+.ps-content {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
 }
