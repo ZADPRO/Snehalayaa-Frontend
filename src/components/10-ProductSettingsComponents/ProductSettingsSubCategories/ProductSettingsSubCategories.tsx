@@ -24,9 +24,13 @@ import {
   exportPdf,
   fetchSubCategories,
 } from "./ProductSettingsSubCategories.function";
+import AddEditSubCategories from "./AddEditSubCategories/AddEditSubCategories";
+import { fetchCategories } from "./AddEditSubCategories/AddEditSubCategories.function";
+import type { Category } from "../ProductSettingsCategories/ProductSettingsCategories.interface";
 
 const ProductSettingsSubCategories: React.FC = () => {
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedSubCategories, setSelectedSubCategories] = useState<
     SubCategory[]
   >([]);
@@ -34,6 +38,9 @@ const ProductSettingsSubCategories: React.FC = () => {
     null
   );
   const [loading, setLoading] = useState<boolean>(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+    null
+  );
 
   const toast = useRef<Toast>(null);
   const dt = useRef<DataTable<SubCategory[]>>(null);
@@ -51,6 +58,9 @@ const ProductSettingsSubCategories: React.FC = () => {
     try {
       const data = await fetchSubCategories();
       setSubCategories(data);
+      const categoriesData = await fetchCategories();
+      console.log("categoriesData", categoriesData);
+      setCategories(categoriesData);
     } catch (err: any) {
       toast.current?.show({
         severity: "error",
@@ -158,7 +168,15 @@ const ProductSettingsSubCategories: React.FC = () => {
         onClick={handleDelete}
       />
 
-      <Dropdown placeholder="Select Category" />
+      <Dropdown
+        value={selectedCategoryId}
+        placeholder="Select Category"
+        options={categories}
+        optionLabel="categoryName"
+        optionValue="refCategoryId"
+        onChange={(e) => setSelectedCategoryId(e.value)}
+        showClear
+      />
     </div>
   );
 
@@ -205,7 +223,13 @@ const ProductSettingsSubCategories: React.FC = () => {
       <Tooltip target=".p-button" position="left" />
 
       <DataTable
-        value={subCategories}
+        value={
+          selectedCategoryId
+            ? subCategories.filter(
+                (s) => s.refCategoryId === selectedCategoryId
+              )
+            : subCategories
+        }
         selection={selectedSubCategories}
         onSelectionChange={(e) =>
           setSelectedSubCategories(e.value as SubCategory[])
@@ -249,7 +273,7 @@ const ProductSettingsSubCategories: React.FC = () => {
         }}
         style={{ width: "50vw" }}
       >
-        {/* <SettingsAddEditSubCategories
+        <AddEditSubCategories
           selectedSubCategory={editSubCategory}
           onClose={() => {
             setVisibleRight(false);
@@ -257,7 +281,7 @@ const ProductSettingsSubCategories: React.FC = () => {
             setSelectedSubCategories([]);
           }}
           reloadData={load}
-        /> */}
+        />
       </Sidebar>
     </div>
   );
