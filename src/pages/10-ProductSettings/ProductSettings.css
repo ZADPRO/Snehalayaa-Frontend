@@ -82,3 +82,63 @@
   align-items: center;
   justify-content: center;
 }
+
+/* Make layout vertical instead of left-right */
+.settingsMainColumn {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Horizontal Sidebar */
+.settingsSidebarHorizontal {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px;
+  white-space: nowrap;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+}
+
+/* Scrollbar hidden (optional) */
+.settingsSidebarHorizontal::-webkit-scrollbar {
+  height: 6px;
+}
+.settingsSidebarHorizontal::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+/* Horizontal Tab Item */
+.sidebarItemHorizontal {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+  color: #444;
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
+}
+
+.sidebarItemHorizontal:hover {
+  background-color: #f8edf6;
+}
+
+.sidebarItemHorizontal.active {
+  background-color: #f0d6eb;
+  color: #1e123a;
+  border-bottom: 3px solid #1e123a;
+  font-weight: bold;
+}
+
+/* Content area takes full width */
+.settingsContentFull {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background-color: #eeeeee;
+}

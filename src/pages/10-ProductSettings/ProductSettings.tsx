@@ -1,4 +1,3 @@
-import { Divider } from "primereact/divider";
 import React, { useState } from "react";
 import ProductSettingsCategories from "../../components/10-ProductSettingsComponents/ProductSettingsCategories/ProductSettingsCategories";
 
@@ -81,16 +80,18 @@ const ProductSettings: React.FC = () => {
   return (
     <div>
       <div className="settingsContainer">
-        <div className="settingsMain">
-          {/* Sidebar */}
-          <div className="settingsSidebar">
+        <div className="settingsMainColumn">
+          {/* Horizontal Sidebar */}
+          <div className="settingsSidebarHorizontal">
             {sidebarItems.map((item) => {
               const isActive = item.key === activeKey;
               return (
                 <div
                   key={item.key}
                   onClick={() => setActiveKey(item.key)}
-                  className={`sidebarItem ${isActive ? "active" : ""}`}
+                  className={`sidebarItemHorizontal ${
+                    isActive ? "active" : ""
+                  }`}
                 >
                   {item.icon}
                   <span>{item.label}</span>
@@ -99,10 +100,8 @@ const ProductSettings: React.FC = () => {
             })}
           </div>
 
-          <Divider layout="vertical" />
-
           {/* Main Content */}
-          <div className="settingsContent">
+          <div className="settingsContentFull">
             {sidebarItems.find((item) => item.key === activeKey)?.component}
           </div>
         </div>

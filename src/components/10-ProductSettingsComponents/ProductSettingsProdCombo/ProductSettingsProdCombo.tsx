@@ -106,6 +106,7 @@ const ProductSettingsProdCombo: React.FC = () => {
         value={tableData}
         showGridlines
         scrollable
+        stripedRows
         header={tableHeader}
         selectionMode="checkbox"
         selection={selectedRows}
