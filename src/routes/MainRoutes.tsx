@@ -11,12 +11,15 @@ import Catalogs from "../pages/07-Catalogs/Catalogs";
 import PurchaseOrder from "../pages/08-PurchaseOrder/PurchaseOrder";
 import DebitNote from "../pages/09-DebitNote/DebitNote";
 import ProductSettings from "../pages/10-ProductSettings/ProductSettings";
+import ForgotPassword from "../pages/01-Login/ForgotPassword";
 
 const MainRoutes: React.FC = () => {
   return (
     <div>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
         <Route path="/controlPanel" element={<ControlPanel />} />
 
         <Route path="/dashboard" element={<Dashboard />} />

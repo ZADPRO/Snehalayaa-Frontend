@@ -8,6 +8,12 @@ body {
   font-size: 14px;
 }
 
+.align-start-header {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+}
+
 /* PASSWORD */
 .p-password-input.p-inputtext.p-component {
   width: 100%;
