@@ -22,7 +22,7 @@ const ForgotPassword: React.FC = () => {
 
   // Timer for Resend OTP
   useEffect(() => {
-    let interval: number;
+    let interval: any;
     if (step === 2 && timer > 0) {
       interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
     }
