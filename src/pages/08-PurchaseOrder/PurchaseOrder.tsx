@@ -27,7 +27,7 @@ const sidebarItems = [
 ];
 
 const PurchaseOrder: React.FC = () => {
-  const [activeKey, setActiveKey] = useState("createPO");
+  const [activeKey, setActiveKey] = useState("purchaseOrder");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

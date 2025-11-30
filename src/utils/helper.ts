@@ -1,5 +1,5 @@
-export const baseURL = 'http://localhost:8080/api/v1'
-export const baseURLV2 = 'http://localhost:8080/api/v2'
+export const baseURL = 'https://snehalayaa.brightoncloudtech.com/api/v1'
+export const baseURLV2 = 'https://snehalayaa.brightoncloudtech.com/api/v2'
 // export const baseURL = 'http://192.168.29.236:8080/api/v1'
 // export const baseURL = 'http://192.168.29.236:8080/api/v1'
 // export const baseURL = 'http://192.168.29.236:8080/api/v1'
