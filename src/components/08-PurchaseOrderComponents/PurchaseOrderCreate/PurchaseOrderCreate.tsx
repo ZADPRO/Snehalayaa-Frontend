@@ -76,6 +76,7 @@ const PurchaseOrderCreate: React.FC = () => {
   // After a successful PO save
   const [poLocked, setPoLocked] = useState(false);
   const [poNumber, setPoNumber] = useState<string | null>(null);
+  console.log("poNumber", poNumber);
 
   const load = async () => {
     setLoading(true);
