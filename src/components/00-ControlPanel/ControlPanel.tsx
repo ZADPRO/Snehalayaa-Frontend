@@ -130,7 +130,7 @@ const ControlPanel: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 w-full flex justify-center items-center py-3 mt-[-60px]">
+      <div className="flex-1 w-full flex justify-center items-center py-3 mt-[-100px]">
         <div className="erp-grid gap-2 md:px-10">
           {elements.map((item, index) => (
             <div
