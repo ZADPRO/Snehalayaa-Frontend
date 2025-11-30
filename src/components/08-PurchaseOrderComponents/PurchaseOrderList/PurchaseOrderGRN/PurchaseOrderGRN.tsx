@@ -52,7 +52,7 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
     setShowGRNDialog(false);
   };
 
-  const productRows = grnData?.items ?? selectedPO.products ?? [];
+  const productRows = grnData?.items ?? [];
 
   return (
     <div className="">

@@ -245,8 +245,9 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
     }));
 
     const payload = {
-      poId: selectedPO?.id,
-      supplierId: selectedPO?.supplierId,
+      poId: selectedPO!.id,
+      supplierId: selectedPO!.supplierId,
+      branchId: selectedPO!.branchid,
       items,
     };
 
@@ -378,7 +379,7 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
         <InputNumber
           placeholder="Quantity"
           value={quantity}
-          max={receivedQty}
+          max={receivedQty ?? undefined}
           onValueChange={(e) => {
             const q = e.value || 0;
             if (q > (receivedQty ?? 0)) {
