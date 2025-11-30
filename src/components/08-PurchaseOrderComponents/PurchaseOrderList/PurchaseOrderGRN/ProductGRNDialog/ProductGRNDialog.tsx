@@ -357,7 +357,12 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
         />
 
         {/* TOTAL (auto-calculated) */}
-        <Column header="Total" body={(r) => r.total} />
+        <Column
+          header="Total"
+          body={(r) => (
+            <InputNumber value={r.total} className="w-full" disabled />
+          )}
+        />
 
         {/* DESIGN */}
         <Column
