@@ -2,37 +2,30 @@ import { Check, Pencil, Trash2 } from "lucide-react";
 import { Button } from "primereact/button";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
-import { Divider } from "primereact/divider";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { Toast } from "primereact/toast";
 import { InputSwitch } from "primereact/inputswitch";
 import React, { useEffect, useRef, useState } from "react";
+
 import {
   fetchBranch,
   fetchCategories,
   fetchSubCategories,
   fetchSupplier,
+  calculateLineTotal,
+  validateLine,
+  showToastMsg,
+  createPurchaseOrder,
 } from "./PurchaseOrderCreate.function";
+
 import type {
   Branch,
   Category,
   SubCategory,
   Supplier,
+  LineItem,
 } from "./PurchaseOrderCreate.interface";
-
-interface LineItem {
-  id: number;
-  categoryId: number;
-  subCategoryId: number;
-  productDescription: string;
-  unitPrice: number;
-  quantity: number;
-  discountPercent: number; // line-level %
-  discountAmount: number;
-  total: number;
-  locked?: boolean; // for duplicate/merged rows
-}
 
 const taxOptions = [0, 2, 2.5, 5, 8, 12, 18].map((v) => ({
   label: `${v}%`,
@@ -69,7 +62,10 @@ const PurchaseOrderCreate: React.FC = () => {
   const [discountPercent, setDiscountPercent] = useState<string>("");
 
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  // Incremental ID for frontend rows
+  const [lineId, setLineId] = useState(1);
 
   const [taxEnabled, setTaxEnabled] = useState<boolean>(false);
   const [taxRate, setTaxRate] = useState<number>(0);
@@ -77,27 +73,24 @@ const PurchaseOrderCreate: React.FC = () => {
   const [paymentFee, setPaymentFee] = useState<string>("0");
   const [shippingFee, setShippingFee] = useState<string>("0");
 
+  // After a successful PO save
+  const [poLocked, setPoLocked] = useState(false);
+  const [poNumber, setPoNumber] = useState<string | null>(null);
+
   const load = async () => {
     setLoading(true);
     try {
-      const supplierDetails = await fetchSupplier();
-      setSupplierDetails(supplierDetails);
-
-      const branchDetails = await fetchBranch();
-      setBranchDetails(branchDetails);
-
-      const categoryDetails = await fetchCategories();
-      setCategoryDetails(categoryDetails);
-
-      const subCategoryDetails = await fetchSubCategories();
-      setSubCategoryDetails(subCategoryDetails);
+      setSupplierDetails(await fetchSupplier());
+      setBranchDetails(await fetchBranch());
+      setCategoryDetails(await fetchCategories());
+      setSubCategoryDetails(await fetchSubCategories());
     } catch (err: any) {
-      toast.current?.show({
-        severity: "error",
-        summary: "Error",
-        detail: err.message || "Failed to load data",
-        life: 3000,
-      });
+      showToastMsg(
+        toast,
+        "error",
+        "Error",
+        err.message || "Failed to load data"
+      );
     } finally {
       setLoading(false);
     }
@@ -114,74 +107,57 @@ const PurchaseOrderCreate: React.FC = () => {
         (sub) => sub.refCategoryId === selectedCategory
       );
       setFilteredSubCategories(filtered);
-      setSelectedSubCategory(null); // reset subcategory when category changes
+      setSelectedSubCategory(null);
     } else {
       setFilteredSubCategories([]);
       setSelectedSubCategory(null);
     }
   }, [selectedCategory, subCategoryDetails]);
 
-  // Helpers
-  const handleNumericChange =
+  // Numeric input helper
+  const handleNumeric =
     (setter: (val: string) => void) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      if (value === "" || /^[0-9]*\.?[0-9]*$/.test(value)) {
-        setter(value);
+      const v = e.target.value;
+      if (v === "" || /^[0-9]*\.?[0-9]*$/.test(v)) {
+        setter(v);
       }
     };
 
-  const resetLineForm = () => {
+  const resetForm = () => {
     setSelectedCategory(null);
     setSelectedSubCategory(null);
     setProductDescription("");
     setUnitPrice("");
     setQuantity("");
     setDiscountPercent("");
-    setEditingIndex(null);
+    setEditingId(null);
   };
 
-  const showToast = (
-    severity: "success" | "info" | "warn" | "error",
-    summary: string,
-    detail: string
-  ) => {
-    toast.current?.show({ severity, summary, detail, life: 2500 });
-  };
+  const handleAddOrUpdate = () => {
+    const validation = validateLine({
+      selectedCategory,
+      selectedSubCategory,
+      productDescription,
+      unitPrice,
+      quantity,
+      discountPercent,
+    });
 
-  const handleAddOrUpdateLine = () => {
-    if (!selectedCategory || !selectedSubCategory) {
-      showToast("warn", "Validation", "Please select Category & Sub Category");
-      return;
-    }
-    if (!productDescription.trim()) {
-      showToast("warn", "Validation", "Please enter Product Description");
-      return;
-    }
-    const uPrice = parseFloat(unitPrice);
-    const qty = parseFloat(quantity);
-    const disc = discountPercent ? parseFloat(discountPercent) : 0;
-
-    if (isNaN(uPrice) || uPrice <= 0) {
-      showToast("warn", "Validation", "Please enter valid Unit Price");
-      return;
-    }
-    if (isNaN(qty) || qty <= 0) {
-      showToast("warn", "Validation", "Please enter valid Quantity");
-      return;
-    }
-    if (disc < 0) {
-      showToast("warn", "Validation", "Discount cannot be negative");
+    if (!validation.valid) {
+      showToastMsg(toast, "warn", "Validation", validation.message || "");
       return;
     }
 
-    const lineSubtotal = uPrice * qty;
-    const discountAmount = (lineSubtotal * disc) / 100;
-    const total = lineSubtotal - discountAmount;
+    const { uPrice, qty, disc, discountAmount, total } = calculateLineTotal(
+      unitPrice,
+      quantity,
+      discountPercent
+    );
 
     const baseData = {
-      categoryId: selectedCategory,
-      subCategoryId: selectedSubCategory,
+      categoryId: selectedCategory!,
+      subCategoryId: selectedSubCategory!,
       productDescription: productDescription.trim(),
       unitPrice: uPrice,
       quantity: qty,
@@ -190,100 +166,59 @@ const PurchaseOrderCreate: React.FC = () => {
       total,
     };
 
-    // Duplicate detection (same cat, subcat, desc, unit price)
-    const duplicateIndex = lineItems.findIndex(
-      (item) =>
-        item.categoryId === baseData.categoryId &&
-        item.subCategoryId === baseData.subCategoryId &&
-        item.productDescription.toLowerCase() ===
-          baseData.productDescription.toLowerCase() &&
-        item.unitPrice === baseData.unitPrice
-    );
-
-    if (editingIndex !== null) {
-      // Editing existing row
-      const updated = [...lineItems];
-      updated[editingIndex] = {
-        ...updated[editingIndex],
-        ...baseData,
-        locked: updated[editingIndex].locked,
-      };
-      setLineItems(updated);
-      console.log("Updated Line Items:", updated);
-      showToast("success", "Updated", "Line item updated successfully");
-      resetLineForm();
-      return;
-    }
-
-    if (duplicateIndex !== -1) {
-      // Same data again: merge with existing row and lock it
-      const updated = [...lineItems];
-      const existing = updated[duplicateIndex];
-      const newQty = existing.quantity + qty;
-      const newSubtotal = existing.unitPrice * newQty;
-      const newDiscountAmount = (newSubtotal * existing.discountPercent) / 100;
-      const newTotal = newSubtotal - newDiscountAmount;
-
-      updated[duplicateIndex] = {
-        ...existing,
-        quantity: newQty,
-        discountAmount: newDiscountAmount,
-        total: newTotal,
-        locked: true, // make it uneditable
-      };
-
-      setLineItems(updated);
-      console.log("Merged Duplicate Line Items:", updated);
-      showToast(
-        "info",
-        "Duplicate Merged",
-        "Same product found, quantity merged & row locked"
+    if (editingId !== null) {
+      setLineItems((prev) =>
+        prev.map((row) =>
+          row.id === editingId ? { ...row, ...baseData } : row
+        )
       );
-      resetLineForm();
+      resetForm();
       return;
     }
 
-    // New line
     const newItem: LineItem = {
-      id: Date.now(),
+      id: lineId,
       locked: false,
       ...baseData,
     };
 
-    const newList = [...lineItems, newItem];
-    setLineItems(newList);
-    console.log("Added Line Item:", newItem);
-    showToast("success", "Added", "Line item added successfully");
-    resetLineForm();
+    setLineItems((prev) => [...prev, newItem]);
+    setLineId((prev) => prev + 1);
+    resetForm();
   };
 
-  const handleEditRow = (rowData: LineItem, rowIndex: number) => {
-    if (rowData.locked) {
-      showToast(
+  const handleEditRow = (row: LineItem) => {
+    if (row.locked) {
+      showToastMsg(
+        toast,
         "warn",
         "Locked",
-        "This row is locked and cannot be edited (duplicate merge)."
+        "This row is locked and cannot be edited."
       );
       return;
     }
-    setSelectedCategory(rowData.categoryId);
-    setSelectedSubCategory(rowData.subCategoryId);
-    setProductDescription(rowData.productDescription);
-    setUnitPrice(rowData.unitPrice.toString());
-    setQuantity(rowData.quantity.toString());
-    setDiscountPercent(rowData.discountPercent.toString());
-    setEditingIndex(rowIndex);
-    showToast("info", "Editing", "You are editing the selected line");
+
+    setSelectedCategory(row.categoryId);
+
+    // Wait a tick so filteredSubCategories updates based on category
+    setTimeout(() => {
+      setSelectedSubCategory(row.subCategoryId);
+    }, 10);
+
+    setProductDescription(row.productDescription);
+    setUnitPrice(row.unitPrice.toString());
+    setQuantity(row.quantity.toString());
+    setDiscountPercent(row.discountPercent.toString());
+
+    setEditingId(row.id);
   };
 
-  const handleDeleteRow = (rowIndex: number) => {
-    const newList = lineItems.filter((_, idx) => idx !== rowIndex);
-    setLineItems(newList);
-    console.log("After Delete, Line Items:", newList);
-    showToast("success", "Deleted", "Line item deleted");
+  const handleDeleteRow = (rowId: number) => {
+    setLineItems((prev) => prev.filter((item) => item.id !== rowId));
+    showToastMsg(toast, "success", "Deleted", "Line item deleted");
   };
 
-  // Summary Calculations
+  // Summary calculations
   const subtotal = lineItems.reduce((sum, item) => sum + item.total, 0);
   const numericPaymentFee = parseFloat(paymentFee) || 0;
   const numericShippingFee = parseFloat(shippingFee) || 0;
@@ -300,13 +235,23 @@ const PurchaseOrderCreate: React.FC = () => {
     (b) => b.refBranchId === selectedBranchId
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedSupplierId || !selectedBranchId) {
-      showToast("warn", "Validation", "Please select Supplier & Branch");
+      showToastMsg(
+        toast,
+        "warn",
+        "Validation",
+        "Please select Supplier & Branch"
+      );
       return;
     }
     if (lineItems.length === 0) {
-      showToast("warn", "Validation", "Please add at least one line item");
+      showToastMsg(
+        toast,
+        "warn",
+        "Validation",
+        "Please add at least one line item"
+      );
       return;
     }
 
@@ -333,8 +278,26 @@ const PurchaseOrderCreate: React.FC = () => {
       })),
     };
 
-    console.log("== PURCHASE ORDER PAYLOAD ==", payload);
-    showToast("success", "Saved", "Payload logged to console");
+    try {
+      setLoading(true);
+
+      const result = await createPurchaseOrder(payload);
+      console.log("📦 Purchase Order Created:", result);
+
+      setPoNumber(result.data.poNumber);
+      setPoLocked(true);
+
+      showToastMsg(toast, "success", "Success", "Purchase Order Created!");
+    } catch (err: any) {
+      showToastMsg(
+        toast,
+        "error",
+        "Error",
+        err.message || "Failed to create PO"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getCategoryName = (id: number) =>
@@ -359,6 +322,7 @@ const PurchaseOrderCreate: React.FC = () => {
                 optionLabel="supplierName"
                 optionValue="supplierId"
                 value={selectedSupplierId}
+                disabled={poLocked}
                 onChange={(e) => setSelectedSupplierId(e.value)}
               />
             </div>
@@ -370,6 +334,7 @@ const PurchaseOrderCreate: React.FC = () => {
                 optionValue="refBranchId"
                 optionLabel="refBranchName"
                 value={selectedBranchId}
+                disabled={poLocked}
                 onChange={(e) => setSelectedBranchId(e.value)}
               />
             </div>
@@ -382,12 +347,12 @@ const PurchaseOrderCreate: React.FC = () => {
                 {selectedSupplier?.creditedDays ?? 30} Days
               </p>
             </div>
-            |
+            <span>|</span>
             <div className="flex gap-2">
               <p className="font-semibold">Payment Status</p>
               <p className="text-gray-600">Pending</p>
             </div>
-            |
+            <span>|</span>
             <div className="flex gap-2">
               <p className="font-semibold">Due On</p>
               <p className="text-gray-600">29-11-2025</p>
@@ -407,6 +372,7 @@ const PurchaseOrderCreate: React.FC = () => {
                 optionLabel="categoryName"
                 optionValue="refCategoryId"
                 value={selectedCategory}
+                disabled={poLocked}
                 onChange={(e) => setSelectedCategory(e.value)}
               />
             </div>
@@ -418,6 +384,7 @@ const PurchaseOrderCreate: React.FC = () => {
                 optionLabel="subCategoryName"
                 optionValue="refSubCategoryId"
                 value={selectedSubCategory}
+                disabled={poLocked}
                 onChange={(e) => setSelectedSubCategory(e.value)}
               />
             </div>
@@ -426,6 +393,7 @@ const PurchaseOrderCreate: React.FC = () => {
                 placeholder="Product Description"
                 className="w-full"
                 value={productDescription}
+                disabled={poLocked}
                 onChange={(e) => setProductDescription(e.target.value)}
               />
             </div>
@@ -433,8 +401,9 @@ const PurchaseOrderCreate: React.FC = () => {
               <InputText
                 placeholder="Unit Price"
                 className="w-full"
+                disabled={poLocked}
                 value={unitPrice}
-                onChange={handleNumericChange(setUnitPrice)}
+                onChange={handleNumeric(setUnitPrice)}
               />
             </div>
             <div className="flex-1">
@@ -442,7 +411,8 @@ const PurchaseOrderCreate: React.FC = () => {
                 placeholder="Quantity"
                 className="w-full"
                 value={quantity}
-                onChange={handleNumericChange(setQuantity)}
+                disabled={poLocked}
+                onChange={handleNumeric(setQuantity)}
               />
             </div>
             <div className="flex-1">
@@ -450,13 +420,15 @@ const PurchaseOrderCreate: React.FC = () => {
                 placeholder="Discount %"
                 className="w-full"
                 value={discountPercent}
-                onChange={handleNumericChange(setDiscountPercent)}
+                disabled={poLocked}
+                onChange={handleNumeric(setDiscountPercent)}
               />
             </div>
             <Button
               icon={<Check size={18} />}
-              onClick={handleAddOrUpdateLine}
+              onClick={handleAddOrUpdate}
               loading={loading}
+              disabled={poLocked}
             />
           </div>
 
@@ -464,6 +436,7 @@ const PurchaseOrderCreate: React.FC = () => {
           <div className="mt-3">
             <DataTable
               value={lineItems}
+              dataKey="id"
               showGridlines
               stripedRows
               paginator
@@ -511,27 +484,26 @@ const PurchaseOrderCreate: React.FC = () => {
               />
               <Column
                 header="Edit"
-                body={(rowData, options) => (
+                body={(rowData: LineItem) => (
                   <Button
                     icon={<Pencil size={16} />}
                     text
                     rounded
-                    disabled={rowData.locked}
-                    onClick={() =>
-                      handleEditRow(rowData as LineItem, options.rowIndex)
-                    }
+                    disabled={rowData.locked || poLocked}
+                    onClick={() => handleEditRow(rowData)}
                   />
                 )}
               />
               <Column
                 header="Delete"
-                body={(_, options) => (
+                body={(rowData: LineItem) => (
                   <Button
                     icon={<Trash2 size={16} />}
                     text
                     rounded
                     severity="danger"
-                    onClick={() => handleDeleteRow(options.rowIndex)}
+                    disabled={poLocked}
+                    onClick={() => handleDeleteRow(rowData.id)}
                   />
                 )}
               />
@@ -540,11 +512,11 @@ const PurchaseOrderCreate: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Side 25% */}
+      {/* RIGHT 25% */}
       <div className="w-[25%] flex flex-col gap-2">
         {/* Supplier & Branch Details */}
         <div className="bg-white flex flex-col p-4 rounded-md shadow justify-between items-start gap-4">
-          <div className="flex flex-col flex-1">
+          <div className="flex flex-col flex-1 w-full">
             <h4 className="font-semibold mb-3">Supplier Details</h4>
             <p>{selectedSupplier?.supplierCompanyName || "-"}</p>
             <p>{selectedSupplier?.supplierName || "-"}</p>
@@ -570,7 +542,8 @@ const PurchaseOrderCreate: React.FC = () => {
                 : "-"}
             </p>
           </div>
-          <div className="flex flex-col flex-1">
+
+          <div className="flex flex-col flex-1 w-full">
             <h4 className="font-semibold mb-3">Branch Details</h4>
             <p>Company Name</p>
             <p>{selectedBranch?.refBranchName || "-"}</p>
@@ -583,9 +556,14 @@ const PurchaseOrderCreate: React.FC = () => {
         {/* Tax + Actions + Fees */}
         <div className="bg-white p-4 rounded-md shadow flex flex-col gap-3">
           <div className="flex gap-2">
-            <Button label="Save" className="flex-1" onClick={handleSave} />
-            <Button label="Download" className="flex-1" />
-            <Button label="Print" className="flex-1" />
+            <Button
+              label="Save"
+              className="flex-1"
+              onClick={handleSave}
+              disabled={poLocked || loading}
+            />
+            <Button label="Download" className="flex-1" disabled={!poLocked} />
+            <Button label="Print" className="flex-1" disabled={!poLocked} />
           </div>
 
           {/* Tax toggle + dropdown */}
@@ -594,6 +572,7 @@ const PurchaseOrderCreate: React.FC = () => {
             <InputSwitch
               checked={taxEnabled}
               onChange={(e) => setTaxEnabled(e.value)}
+              disabled={poLocked}
             />
           </div>
           {taxEnabled && (
@@ -603,6 +582,7 @@ const PurchaseOrderCreate: React.FC = () => {
                 options={taxOptions}
                 onChange={(e) => setTaxRate(e.value)}
                 className="w-full"
+                disabled={poLocked}
                 placeholder="Select Tax %"
               />
             </div>
@@ -617,8 +597,9 @@ const PurchaseOrderCreate: React.FC = () => {
                 </span>
                 <InputText
                   value={paymentFee}
-                  onChange={handleNumericChange(setPaymentFee)}
+                  onChange={handleNumeric(setPaymentFee)}
                   className="w-full"
+                  disabled={poLocked}
                 />
               </div>
               <div className="flex-1">
@@ -627,8 +608,9 @@ const PurchaseOrderCreate: React.FC = () => {
                 </span>
                 <InputText
                   value={shippingFee}
-                  onChange={handleNumericChange(setShippingFee)}
+                  onChange={handleNumeric(setShippingFee)}
                   className="w-full"
+                  disabled={poLocked}
                 />
               </div>
             </div>

@@ -78,3 +78,21 @@ export interface SubCategory {
   isDelete: boolean;
   refCategoryId: number;
 }
+
+export interface LineItem {
+  id: number;
+  categoryId: number;
+  subCategoryId: number;
+  productDescription: string;
+  unitPrice: number;
+  quantity: number;
+  discountPercent: number;
+  discountAmount: number;
+  total: number;
+  locked?: boolean;
+}
+
+export interface LineValidationResult {
+  valid: boolean;
+  message?: string;
+}
