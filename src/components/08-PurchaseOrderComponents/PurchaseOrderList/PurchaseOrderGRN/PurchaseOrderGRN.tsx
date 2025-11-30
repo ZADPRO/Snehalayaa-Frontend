@@ -8,15 +8,24 @@ import { InputNumber } from "primereact/inputnumber";
 import ProductGRNDialog from "./ProductGRNDialog/ProductGRNDialog";
 import ProductGRNInvoice from "./ProductGRNInvoice/ProductGRNInvoice";
 import { Divider } from "primereact/divider";
+import { createGRN } from "./PurchaseOrderGRN.function";
 
 interface Props {
   selectedPO: PurchaseOrderListItem | null;
 }
 
 const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
+  console.log("selectedPO", selectedPO);
   const [receivedQty, setReceivedQty] = useState<number | null>(null);
   const [showGRNDialog, setShowGRNDialog] = useState(false);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+
+  // GRN data returned from child
+  const [grnData, setGrnData] = useState<{
+    poId: number;
+    supplierId: number;
+    items: any[];
+  } | null>(null);
 
   if (!selectedPO) return <p>No PO selected</p>;
 
@@ -27,6 +36,23 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
     }
     setShowGRNDialog(true);
   };
+
+  const handleGRNSave = (payload: {
+    poId: number;
+    supplierId: number;
+    items: any[];
+  }) => {
+    const finalPayload = {
+      ...payload,
+      branchId: selectedPO.refBranchId, // ✅ ADD THIS
+    };
+
+    console.log("✅ GRN DATA RECEIVED IN PARENT:", finalPayload);
+    setGrnData(finalPayload);
+    setShowGRNDialog(false);
+  };
+
+  const productRows = grnData?.items ?? selectedPO.products ?? [];
 
   return (
     <div className="">
@@ -56,6 +82,7 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
         </div>
       </div>
       <Divider />
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <p>Enter Received Quantity :</p>
@@ -76,25 +103,91 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
             label="Upload Invoice"
             onClick={() => setShowInvoiceDialog(true)}
           />
-          <Button label="Save Products" onClick={handleStartGRN} />
+          <Button
+            label="Save Products"
+            onClick={async () => {
+              if (!grnData) {
+                alert("No GRN data to save!");
+                return;
+              }
+
+              try {
+                const result = await createGRN({
+                  ...grnData!,
+                  branchId: selectedPO.refBranchId, // 🔥 Correct place to pass branch id
+                });
+                console.log("GRN saved:", result);
+                alert("GRN Saved Successfully!");
+              } catch (err: any) {
+                alert(err.message || "Failed to save GRN");
+              }
+            }}
+          />
         </div>
       </div>
       <Divider />
 
       <div className="mt-2 mb-2">
         <p className="mb-2">Product Details</p>
-        <DataTable showGridlines stripedRows value={selectedPO.products || []}>
+
+        {/* If GRN is done, show GRN items; else show original PO products */}
+        <DataTable showGridlines stripedRows value={productRows}>
           <Column header="S.No" body={(_, opt) => opt.rowIndex + 1} />
+
+          {/* When GRN present: productName, else from PO */}
           <Column field="productName" header="Product" />
-          <Column field="" header="Ref No" />
-          <Column field="" header="Design" />
-          <Column field="" header="Pattern" />
-          <Column field="" header="Varient" />
-          <Column field="" header="Color" />
-          <Column field="" header="Size" />
-          <Column field="" header="Profit %" />
-          <Column field="" header="Total" />
-          <Column field="" header="Delete" />
+
+          <Column field="refNo" header="Ref No" />
+
+          <Column
+            header="Design"
+            body={(row: any) => row.design?.name ?? row.designName ?? ""}
+          />
+
+          <Column
+            header="Pattern"
+            body={(row: any) => row.pattern?.name ?? row.patternName ?? ""}
+          />
+
+          <Column
+            header="Variant"
+            body={(row: any) => row.variant?.name ?? row.variantName ?? ""}
+          />
+
+          <Column
+            header="Color"
+            body={(row: any) => row.color?.name ?? row.colorName ?? ""}
+          />
+
+          <Column
+            header="Size"
+            body={(row: any) => row.size?.name ?? row.sizeName ?? ""}
+          />
+
+          <Column field="profitPercent" header="Profit %" />
+
+          <Column field="total" header="Total" />
+
+          {/* Delete in main table for GRN items (optional) */}
+          {grnData && (
+            <Column
+              header="Delete"
+              body={(_, opt) => (
+                <Button
+                  text
+                  severity="danger"
+                  icon="pi pi-trash"
+                  onClick={() => {
+                    if (!grnData) return;
+                    const updatedItems = grnData.items.filter(
+                      (_: any, i: number) => i !== opt.rowIndex
+                    );
+                    setGrnData({ ...grnData, items: updatedItems });
+                  }}
+                />
+              )}
+            />
+          )}
         </DataTable>
       </div>
 
@@ -110,8 +203,10 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
           selectedPO={selectedPO}
           receivedQty={receivedQty}
           closeDialog={() => setShowGRNDialog(false)}
-        />{" "}
+          onGRNSave={handleGRNSave}
+        />
       </Dialog>
+
       <Dialog
         header="Invoice"
         visible={showInvoiceDialog}
@@ -123,7 +218,7 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
         <ProductGRNInvoice
           selectedPO={selectedPO}
           closeDialog={() => setShowInvoiceDialog(false)}
-        />{" "}
+        />
       </Dialog>
     </div>
   );

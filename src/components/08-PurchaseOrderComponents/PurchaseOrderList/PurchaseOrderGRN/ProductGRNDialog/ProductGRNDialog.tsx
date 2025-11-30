@@ -1,10 +1,6 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  createRef,
-  RefObject,
-} from "react";
+import React, { useEffect, useRef, useState, createRef } from "react";
+import type { RefObject } from "react";
+
 import type { ProductGRNDialogProps } from "./ProductGRNDialog.interface";
 
 import { Dropdown } from "primereact/dropdown";
@@ -27,10 +23,9 @@ import type {
   Category,
   SubCategory,
   ProductItem,
-  // GRNRow, // we’ll just use `any` rows to avoid interface mismatch
 } from "../PurchaseOrderGRN.interface";
 
-const LAST_NAV_COL_INDEX = 9; // LineNo..Size = 0..9
+const LAST_NAV_COL_INDEX = 9;
 
 type OptionItem = {
   label: string;
@@ -40,30 +35,26 @@ type OptionItem = {
 const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
   selectedPO,
   receivedQty,
+  closeDialog,
+  onGRNSave,
 }) => {
   const toast = useRef<Toast>(null);
-
-  /**
-   * cellRefs[rowIndex][colIndex] -> RefObject<any>
-   * Created lazily via getCellRef to avoid timing issues.
-   */
   const cellRefs = useRef<RefObject<any>[][]>([]);
 
-  // MASTER DROPDOWNS
+  // MASTER
   const [categoryDetails, setCategoryDetails] = useState<Category[]>([]);
   const [subCategoryDetails, setSubCategoryDetails] = useState<SubCategory[]>(
     []
   );
   const [productDetails, setProductDetails] = useState<ProductItem[]>([]);
 
-  // MASTER LISTS (ID + label)
   const [designList, setDesignList] = useState<OptionItem[]>([]);
   const [patternList, setPatternList] = useState<OptionItem[]>([]);
   const [variantList, setVariantList] = useState<OptionItem[]>([]);
   const [colorList, setColorList] = useState<OptionItem[]>([]);
   const [sizeList, setSizeList] = useState<OptionItem[]>([]);
 
-  // FORM FIELDS
+  // FORM
   const [category, setCategory] = useState<any>(null);
   const [subCategory, setSubCategory] = useState<any>(null);
   const [product, setProduct] = useState<any>(null);
@@ -75,12 +66,28 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
   const [profit, setProfit] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(0);
 
-  // use `any` to keep flexible fields (designId, etc.)
   const [rows, setRows] = useState<any[]>([]);
 
-  /* ---------- HELPERS ---------- */
+  // --------------------------------------------------------------------------
+  // 🔥 FIX: Converts string typed in editable dropdown → correct numeric ID
+  // --------------------------------------------------------------------------
 
-  // Lazily ensure a ref exists for given cell
+  const normalizeDropdownValue = (list: OptionItem[], value: any) => {
+    if (value == null) return null;
+
+    // Already numeric → OK
+    if (typeof value === "number") return value;
+
+    // Typed label → convert text to ID
+    const match = list.find(
+      (o) => o.label.toLowerCase() === String(value).toLowerCase()
+    );
+
+    return match?.value ?? null;
+  };
+
+  // --------------------------------------------------------------------------
+
   const getCellRef = (rowIndex: number, colIndex: number): RefObject<any> => {
     if (!cellRefs.current[rowIndex]) {
       cellRefs.current[rowIndex] = [];
@@ -91,11 +98,18 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
     return cellRefs.current[rowIndex][colIndex];
   };
 
-  const calculateTotal = (c: number, p: number) => {
-    return Number((c + (c * p) / 100).toFixed(2));
+  const calculateTotal = (c: number, p: number) =>
+    Number((c + (c * p) / 100).toFixed(2));
+
+  const mapOptionToObject = (list: OptionItem[], id: number | null) => {
+    if (id == null) return { id: null, name: "" };
+    const opt = list.find((o) => o.value === id);
+    return { id, name: opt?.label ?? "" };
   };
 
-  /* ---------- LOAD MASTER DATA ---------- */
+  // --------------------------------------------------------------------------
+  // Load master data
+  // --------------------------------------------------------------------------
 
   const loadMaster = async () => {
     try {
@@ -113,41 +127,19 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
       setSubCategoryDetails(subs);
       setProductDetails(prods);
 
-      // Map to {label, value} using id + name
       setDesignList(
-        designs.map((d: any) => ({
-          label: d.designName,
-          value: d.id,
-        }))
+        designs.map((d: any) => ({ label: d.designName, value: d.id }))
       );
-
       setPatternList(
-        patterns.map((d: any) => ({
-          label: d.PatternName,
-          value: d.id,
-        }))
+        patterns.map((d: any) => ({ label: d.PatternName, value: d.id }))
       );
-
       setVariantList(
-        variants.map((d: any) => ({
-          label: d.VarientName,
-          value: d.id,
-        }))
+        variants.map((d: any) => ({ label: d.VarientName, value: d.id }))
       );
-
       setColorList(
-        colors.map((d: any) => ({
-          label: d.colorName,
-          value: d.id,
-        }))
+        colors.map((d: any) => ({ label: d.colorName, value: d.id }))
       );
-
-      setSizeList(
-        sizes.map((d: any) => ({
-          label: d.sizeName,
-          value: d.id,
-        }))
-      );
+      setSizeList(sizes.map((d: any) => ({ label: d.sizeName, value: d.id })));
     } catch (err: any) {
       toast.current?.show({
         severity: "error",
@@ -161,16 +153,14 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
     loadMaster();
   }, []);
 
-  /* ---------- AUTO SET HSN ---------- */
-
+  // Set HSN automatically
   useEffect(() => {
     if (!product) return;
-    const selected = productDetails.find((p) => p.id === product);
-    setHsn(selected?.hsnCode || "");
+    const selectedProd = productDetails.find((p) => p.id === product);
+    setHsn(selectedProd?.hsnCode || "");
   }, [product, productDetails]);
 
-  /* ---------- GENERATE ROWS WHEN QUANTITY / MAIN FIELDS CHANGE ---------- */
-
+  // Auto-generate rows
   useEffect(() => {
     if (!quantity || quantity <= 0) {
       setRows([]);
@@ -180,37 +170,30 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
 
     const newRows = Array.from({ length: quantity }).map((_, i) => ({
       sNo: i + 1,
-      lineNo: lineNo || "",
+      lineNo,
       refNo: "",
       cost,
       profitPercent: profit,
       total: calculateTotal(cost, profit),
-      // store IDs for design-related fields
-      design: null as number | null,
-      pattern: null as number | null,
-      variant: null as number | null,
-      color: null as number | null,
-      size: null as number | null,
+      design: null,
+      pattern: null,
+      variant: null,
+      color: null,
+      size: null,
     }));
 
     setRows(newRows);
-    // refs will be created lazily by getCellRef
   }, [quantity, lineNo, cost, profit]);
-
-  /* ---------- UPDATE ROW FIELD ---------- */
 
   const updateRow = (index: number, field: string, value: any) => {
     setRows((prev) =>
       prev.map((row, i) => {
         if (i !== index) return row;
 
-        const updated: any = { ...row, [field]: value };
+        const updated = { ...row, [field]: value };
 
-        // Recalculate total if cost or profit changed
         if (field === "cost" || field === "profitPercent") {
-          const c = Number(updated.cost || 0);
-          const p = Number(updated.profitPercent || 0);
-          updated.total = calculateTotal(c, p);
+          updated.total = calculateTotal(updated.cost, updated.profitPercent);
         }
 
         return updated;
@@ -218,17 +201,25 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
     );
   };
 
-  /* ---------- DELETE ROW ---------- */
-
   const deleteRow = (index: number) => {
-    const updated = rows.filter((_, i) => i !== index);
-    setRows(updated.map((r, i) => ({ ...r, sNo: i + 1 })));
-    // refs will adjust lazily next render
+    const updated = rows
+      .filter((_, i) => i !== index)
+      .map((r, i) => ({ ...r, sNo: i + 1 }));
+
+    setRows(updated);
+
+    cellRefs.current = updated.map(() =>
+      Array(LAST_NAV_COL_INDEX + 1)
+        .fill(null)
+        .map(() => createRef<any>())
+    );
   };
 
   const remainingQty = (receivedQty ?? 0) - rows.length;
 
-  /* ---------- SAVE ---------- */
+  // --------------------------------------------------------------------------
+  // Save final GRN payload
+  // --------------------------------------------------------------------------
 
   const handleSave = () => {
     if (rows.length === 0) {
@@ -240,13 +231,27 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
       return;
     }
 
+    const prodInfo = productDetails.find((p) => p.id === product);
+
+    const items = rows.map((r) => ({
+      ...r,
+      productId: product,
+      productName: prodInfo?.productName ?? "",
+      design: mapOptionToObject(designList, r.design),
+      pattern: mapOptionToObject(patternList, r.pattern),
+      variant: mapOptionToObject(variantList, r.variant),
+      color: mapOptionToObject(colorList, r.color),
+      size: mapOptionToObject(sizeList, r.size),
+    }));
+
     const payload = {
-      poId: selectedPO?.id ?? 0,
-      supplierId: selectedPO?.supplierId ?? 0,
-      items: rows,
+      poId: selectedPO?.id,
+      supplierId: selectedPO?.supplierId,
+      items,
     };
 
     console.log("🔥 FINAL GRN PAYLOAD:", payload);
+    onGRNSave(payload);
 
     toast.current?.show({
       severity: "success",
@@ -256,13 +261,15 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
 
     setRows([]);
     setQuantity(0);
-    cellRefs.current = [];
+    closeDialog();
   };
 
-  /* ---------- KEYBOARD NAVIGATION ---------- */
+  // --------------------------------------------------------------------------
+  // Keyboard Navigation
+  // --------------------------------------------------------------------------
 
   const handleKeyNavigation = (
-    e: React.KeyboardEvent,
+    e: any,
     rowIndex: number,
     colIndex: number,
     isDropdown = false
@@ -270,17 +277,13 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
     if (e.key !== "Enter") return;
     e.preventDefault();
 
-    const refObj = getCellRef(rowIndex, colIndex);
-    const refInstance = refObj.current;
+    const ref = getCellRef(rowIndex, colIndex).current;
 
-    // For Dropdowns: first Enter -> open; second Enter -> move next
     if (isDropdown) {
-      const isOpen =
-        refInstance?.overlayVisible ??
-        !!refInstance?.panel?.element?.offsetParent;
+      const isOpen = ref?.overlayVisible ?? !!ref?.panel?.element?.offsetParent;
 
       if (!isOpen) {
-        refInstance?.show?.();
+        ref?.show?.();
         return;
       }
     }
@@ -295,91 +298,88 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
 
     if (nextRow >= rows.length) return;
 
-    const nextRefInstance = getCellRef(nextRow, nextCol).current;
-    nextRefInstance?.focus?.();
+    getCellRef(nextRow, nextCol).current?.focus?.();
   };
 
-  /* ---------- RENDER ---------- */
+  // --------------------------------------------------------------------------
+  // RENDER
+  // --------------------------------------------------------------------------
 
   return (
     <div className="w-full h-full">
       <Toast ref={toast} />
 
-      {/* TOP DROPDOWNS */}
+      {/* TOP FILTERS */}
       <div className="flex gap-3">
         <Dropdown
           placeholder="Category"
-          className="w-full flex-1"
           options={categoryDetails}
           optionLabel="categoryName"
           optionValue="refCategoryId"
-          filter
           value={category}
           onChange={(e) => setCategory(e.value)}
+          className="w-full flex-1"
+          filter
         />
 
         <Dropdown
           placeholder="Sub Category"
-          className="w-full flex-1"
           options={subCategoryDetails.filter(
             (s) => s.refCategoryId === category
           )}
           optionLabel="subCategoryName"
           optionValue="refSubCategoryId"
-          filter
           value={subCategory}
           onChange={(e) => setSubCategory(e.value)}
+          className="w-full flex-1"
+          filter
         />
 
         <Dropdown
           placeholder="Product"
-          className="w-full flex-1"
           options={productDetails.filter(
             (p) => p.categoryId === category && p.subCategoryId === subCategory
           )}
           optionLabel="productName"
           optionValue="id"
-          filter
           value={product}
           onChange={(e) => setProduct(e.value)}
+          className="w-full flex-1"
+          filter
         />
 
         <InputText value={brand} disabled className="w-full flex-1" />
         <InputText value={hsn} disabled className="w-full flex-1" />
       </div>
 
-      {/* SECOND ROW */}
+      {/* COST / QTY */}
       <div className="flex gap-3 mt-3">
         <InputText
           placeholder="Line No"
-          className="w-full flex-1"
           value={lineNo}
           onChange={(e) => setLineNo(e.target.value)}
+          className="w-full flex-1"
         />
 
         <InputNumber
           placeholder="Cost"
-          className="w-full flex-1"
           value={cost}
-          onValueChange={(e: any) => setCost(e.value ?? 0)}
+          onValueChange={(e) => setCost(e.value ?? 0)}
+          className="w-full flex-1"
         />
 
         <InputNumber
           placeholder="Profit %"
-          className="w-full flex-1"
           value={profit}
-          mode="decimal"
-          minFractionDigits={1}
-          maxFractionDigits={2}
-          onValueChange={(e: any) => setProfit(e.value ?? 0)}
+          onValueChange={(e) => setProfit(e.value ?? 0)}
+          className="w-full flex-1"
         />
 
         <InputNumber
           placeholder="Quantity"
-          className="w-full flex-1"
           value={quantity}
-          max={receivedQty ?? undefined}
-          onValueChange={(e: any) => {
+          max={receivedQty}
+          onValueChange={(e) => {
             const q = e.value || 0;
             if (q > (receivedQty ?? 0)) {
               toast.current?.show({
@@ -391,10 +391,10 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
             }
             setQuantity(q);
           }}
+          className="w-full flex-1"
         />
       </div>
 
-      {/* Remaining Qty */}
       <div className="flex justify-between mt-3 mb-3">
         <p>
           Remaining Qty: <b>{remainingQty}</b>
@@ -417,11 +417,11 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
             <InputText
               ref={getCellRef(opts.rowIndex, 0)}
               value={r.lineNo}
-              onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 0)}
-              className="w-full"
               onChange={(e) =>
                 updateRow(opts.rowIndex, "lineNo", e.target.value)
               }
+              onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 0)}
+              className="w-full"
             />
           )}
         />
@@ -433,11 +433,11 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
             <InputText
               ref={getCellRef(opts.rowIndex, 1)}
               value={r.refNo}
-              onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 1)}
-              className="w-full"
               onChange={(e) =>
                 updateRow(opts.rowIndex, "refNo", e.target.value)
               }
+              onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 1)}
+              className="w-full"
             />
           )}
         />
@@ -449,16 +449,16 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
             <InputNumber
               ref={getCellRef(opts.rowIndex, 2)}
               value={r.cost}
-              className="w-full"
-              onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 2)}
               onValueChange={(e) =>
                 updateRow(opts.rowIndex, "cost", e.value ?? 0)
               }
+              onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 2)}
+              className="w-full"
             />
           )}
         />
 
-        {/* PROFIT % */}
+        {/* PROFIT */}
         <Column
           header="Profit %"
           body={(r, opts) => (
@@ -468,24 +468,22 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
               mode="decimal"
               minFractionDigits={1}
               maxFractionDigits={2}
-              className="w-full"
-              onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 3)}
               onValueChange={(e) =>
                 updateRow(opts.rowIndex, "profitPercent", e.value ?? 0)
               }
+              onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 3)}
+              className="w-full"
             />
           )}
         />
 
-        {/* TOTAL (editable InputText) */}
+        {/* TOTAL */}
         <Column
           header="Total"
           body={(r, opts) => (
             <InputText
               ref={getCellRef(opts.rowIndex, 4)}
-              value={String(r.total ?? "")}
-              onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 4)}
-              className="w-full"
+              value={String(r.total || "")}
               onChange={(e) =>
                 updateRow(
                   opts.rowIndex,
@@ -493,11 +491,13 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
                   parseFloat(e.target.value) || 0
                 )
               }
+              onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 4)}
+              className="w-full"
             />
           )}
         />
 
-        {/* DESIGN (stores ID) */}
+        {/* DESIGN */}
         <Column
           header="Design"
           body={(r, opts) => (
@@ -509,14 +509,20 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
               value={r.design}
               editable
               filter
-              className="w-full"
+              onChange={(e) =>
+                updateRow(
+                  opts.rowIndex,
+                  "design",
+                  normalizeDropdownValue(designList, e.value)
+                )
+              }
               onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 5, true)}
-              onChange={(e) => updateRow(opts.rowIndex, "design", e.value)}
+              className="w-full"
             />
           )}
         />
 
-        {/* PATTERN (stores ID) */}
+        {/* PATTERN */}
         <Column
           header="Pattern"
           body={(r, opts) => (
@@ -528,14 +534,20 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
               value={r.pattern}
               editable
               filter
-              className="w-full"
+              onChange={(e) =>
+                updateRow(
+                  opts.rowIndex,
+                  "pattern",
+                  normalizeDropdownValue(patternList, e.value)
+                )
+              }
               onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 6, true)}
-              onChange={(e) => updateRow(opts.rowIndex, "pattern", e.value)}
+              className="w-full"
             />
           )}
         />
 
-        {/* VARIANT (stores ID) */}
+        {/* VARIANT */}
         <Column
           header="Variant"
           body={(r, opts) => (
@@ -547,14 +559,20 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
               value={r.variant}
               editable
               filter
-              className="w-full"
+              onChange={(e) =>
+                updateRow(
+                  opts.rowIndex,
+                  "variant",
+                  normalizeDropdownValue(variantList, e.value)
+                )
+              }
               onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 7, true)}
-              onChange={(e) => updateRow(opts.rowIndex, "variant", e.value)}
+              className="w-full"
             />
           )}
         />
 
-        {/* COLOR (stores ID) */}
+        {/* COLOR */}
         <Column
           header="Color"
           body={(r, opts) => (
@@ -566,14 +584,20 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
               value={r.color}
               editable
               filter
-              className="w-full"
+              onChange={(e) =>
+                updateRow(
+                  opts.rowIndex,
+                  "color",
+                  normalizeDropdownValue(colorList, e.value)
+                )
+              }
               onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 8, true)}
-              onChange={(e) => updateRow(opts.rowIndex, "color", e.value)}
+              className="w-full"
             />
           )}
         />
 
-        {/* SIZE (stores ID) */}
+        {/* SIZE */}
         <Column
           header="Size"
           body={(r, opts) => (
@@ -585,9 +609,15 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
               value={r.size}
               editable
               filter
-              className="w-full"
+              onChange={(e) =>
+                updateRow(
+                  opts.rowIndex,
+                  "size",
+                  normalizeDropdownValue(sizeList, e.value)
+                )
+              }
               onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 9, true)}
-              onChange={(e) => updateRow(opts.rowIndex, "size", e.value)}
+              className="w-full"
             />
           )}
         />
