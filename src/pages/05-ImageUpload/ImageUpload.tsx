@@ -84,16 +84,10 @@ const ImageUpload: React.FC = () => {
     }
   };
 
-  // -----------------------------
-  // DELETE IMAGE
-  // -----------------------------
   const handleDelete = (name: string) => {
     setImages((prev) => prev.filter((img) => img.name !== name));
   };
 
-  // -----------------------------
-  // Generate Presigned URL
-  // -----------------------------
   const generatePresignedURLs = async (fileNames: string[]) => {
     try {
       const token = localStorage.getItem("token");
@@ -112,9 +106,6 @@ const ImageUpload: React.FC = () => {
     }
   };
 
-  // -----------------------------
-  // UPLOAD TO MINIO
-  // -----------------------------
   const uploadToMinio = async (url: string, blob: Blob, index: number) => {
     setImages((prev) =>
       prev.map((img, i) =>
@@ -144,9 +135,6 @@ const ImageUpload: React.FC = () => {
     );
   };
 
-  // -----------------------------
-  // SAVE FILE NAMES TO BACKEND
-  // -----------------------------
   const saveUploadedFileNames = async (uploadedFiles: string[]) => {
     try {
       const token = localStorage.getItem("token");
@@ -171,9 +159,6 @@ const ImageUpload: React.FC = () => {
     }
   };
 
-  // -----------------------------
-  // SUBMIT (UPLOAD ALL)
-  // -----------------------------
   const handleSubmit = async () => {
     const fileNames = images.map((img) => img.name);
     const presignedData = await generatePresignedURLs(fileNames);
@@ -233,132 +218,131 @@ const ImageUpload: React.FC = () => {
           </div>
         </div>
 
-        {/* ------------------------- */}
-        {/* BULK UPLOAD SECTION */}
-        {/* ------------------------- */}
         <Toast ref={toast} />
 
-        <p
-          style={{ fontSize: "16px", fontWeight: "600", marginBottom: "12px" }}
-        >
-          Bulk Image Upload
-        </p>
-
-        <div className="flex justify-content-between">
-          <FileUpload
-            mode="basic"
-            name="zipFile"
-            accept=".zip"
-            customUpload
-            auto
-            chooseLabel="Upload ZIP"
-            onSelect={handleZipUpload}
-          />
-
-          {images.length > 0 && (
-            <Button
-              label="Submit"
-              icon={<Check size="20px" />}
-              onClick={handleSubmit}
-            />
-          )}
-        </div>
-
-        {/* ------------------------- */}
-        {/* IMAGE GRID */}
-        {/* ------------------------- */}
-        {images.length > 0 && (
-          <div
+        <div className="p-3">
+          <p
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(6, 1fr)",
-              gap: "16px",
-              marginTop: "24px",
+              fontSize: "16px",
+              fontWeight: "600",
+              marginBottom: "12px",
             }}
           >
-            {images.map((img, idx) => (
-              <div
-                key={idx}
-                style={{
-                  position: "relative",
-                  border: "1px solid #ddd",
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  textAlign: "center",
-                  padding: "8px",
-                }}
-              >
-                {!img.uploading && (
-                  <button
-                    onClick={() => handleDelete(img.name)}
-                    style={{
-                      position: "absolute",
-                      top: "6px",
-                      right: "6px",
-                      background: "rgba(0,0,0,0.5)",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "50%",
-                      padding: "4px",
-                      zIndex: "20",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <X size={14} />
-                  </button>
-                )}
+            Bulk Image Upload
+          </p>
 
-                <div style={{ position: "relative" }}>
-                  <img
-                    src={img.url}
-                    alt={img.name}
-                    style={{
-                      width: "100%",
-                      height: "150px",
-                      objectFit: "cover",
-                      opacity: img.uploading ? 0.6 : 1,
-                    }}
-                  />
+          <div className="flex justify-content-between">
+            <FileUpload
+              mode="basic"
+              name="zipFile"
+              accept=".zip"
+              customUpload
+              auto
+              chooseLabel="Upload ZIP"
+              onSelect={handleZipUpload}
+            />
 
-                  {img.uploading && (
-                    <div
+            {images.length > 0 && (
+              <Button
+                label="Submit"
+                icon={<Check size="20px" />}
+                onClick={handleSubmit}
+              />
+            )}
+          </div>
+          {images.length > 0 && (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(6, 1fr)",
+                gap: "16px",
+                marginTop: "24px",
+              }}
+            >
+              {images.map((img, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    position: "relative",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    textAlign: "center",
+                    padding: "8px",
+                  }}
+                >
+                  {!img.uploading && (
+                    <button
+                      onClick={() => handleDelete(img.name)}
                       style={{
                         position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "rgba(0, 0, 0, 0.4)",
+                        top: "6px",
+                        right: "6px",
+                        background: "rgba(0,0,0,0.5)",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "50%",
+                        padding: "4px",
+                        zIndex: "20",
+                        cursor: "pointer",
                       }}
                     >
-                      <ProgressBar
-                        value={img.progress}
-                        showValue
-                        style={{ width: "80%" }}
-                      />
-                    </div>
+                      <X size={14} />
+                    </button>
                   )}
-                </div>
 
-                <p
-                  style={{
-                    fontSize: "12px",
-                    marginTop: "8px",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                  title={img.name}
-                >
-                  {img.name}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+                  <div style={{ position: "relative" }}>
+                    <img
+                      src={img.url}
+                      alt={img.name}
+                      style={{
+                        width: "100%",
+                        height: "150px",
+                        objectFit: "cover",
+                        opacity: img.uploading ? 0.6 : 1,
+                      }}
+                    />
+
+                    {img.uploading && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "rgba(0, 0, 0, 0.4)",
+                        }}
+                      >
+                        <ProgressBar
+                          value={img.progress}
+                          showValue
+                          style={{ width: "80%" }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      marginTop: "8px",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                    title={img.name}
+                  >
+                    {img.name}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

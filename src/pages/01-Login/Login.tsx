@@ -33,7 +33,7 @@ const Login: React.FC = () => {
             detail: `Welcome back, ${userDetails.refUACUsername}!`,
             life: 2000,
           });
-          setTimeout(() => navigate("/dashboard"), 1000);
+          setTimeout(() => navigate("/controlPanel"), 1000);
         }
       } catch (error) {
         console.error("Error parsing stored user details:", error);

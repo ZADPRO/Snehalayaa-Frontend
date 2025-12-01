@@ -1,0 +1,38 @@
+export interface InventoryProduct {
+  id: number;
+  barcode: string;
+  productId: number;
+  productName: string;
+  grnId: number;
+  grnNumber: string;
+  branchId: number;
+  branchCode: string;
+  refBranchCode: string;
+  refBranchName: string;
+  poCreatedDate: string;
+  poSupplierId: number;
+  supplierName: string;
+  categoryId: number | null;
+  categoryName: string | null;
+  subCategoryId: number | null;
+  subCategoryName: string | null;
+  designId: number | null;
+  designName: string;
+  patternId: number | null;
+  patternName: string;
+  varientId: number | null;
+  varientName: string;
+  colorId: number | null;
+  colorName: string;
+  sizeId: number | null;
+  sizeName: string;
+  unitCost: string | number;
+  totalAmount: string | number;
+  marginPercent: string | number;
+  discountPercent: string | number | null;
+  discountAmount: string | number | null;
+  productImage: string | null;
+  imageSku: string | null;
+  createdAt: string;
+  createdBy: string;
+}
