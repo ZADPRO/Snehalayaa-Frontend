@@ -9,7 +9,7 @@ import { Trash2 } from "lucide-react";
 import { Dialog } from "primereact/dialog";
 
 import { fetchBranch } from "../../08-PurchaseOrderComponents/PurchaseOrderCreate/PurchaseOrderCreate.function";
-import { checkSKUInGRN } from "./StockTransfer.function";
+import { checkSKUInGRN, transferStock } from "./StockTransfer.function";
 import type { Branch } from "../../08-PurchaseOrderComponents/PurchaseOrderCreate/PurchaseOrderCreate.interface";
 
 const ProductStockTransfer: React.FC = () => {
@@ -124,6 +124,64 @@ const ProductStockTransfer: React.FC = () => {
     setProducts((prev) => prev.filter((p) => p.sku !== sku));
   };
 
+  const handleTransfer = async () => {
+    if (!fromBranch || !toBranch) {
+      toast.current?.show({
+        severity: "warn",
+        summary: "Missing Branch Info",
+        detail: "Select both From and To branch",
+      });
+      return;
+    }
+
+    if (products.length === 0) {
+      toast.current?.show({
+        severity: "warn",
+        summary: "No Products",
+        detail: "Scan or enter SKU before transfer",
+      });
+      return;
+    }
+
+    const payload = {
+      fromBranchId: fromBranch,
+      toBranchId: toBranch,
+      items: products.map((p) => ({
+        grnItemId: p.id, // IMPORTANT: GRN table primary key
+        productId: p.productId,
+        sku: p.sku,
+      })),
+    };
+
+    console.log("TRANSFER PAYLOAD ==>", payload);
+
+    try {
+      const res = await transferStock(payload);
+
+      if (res.status) {
+        toast.current?.show({
+          severity: "success",
+          summary: "Success",
+          detail: "Stock transferred successfully",
+        });
+
+        setProducts([]); // clear table
+      } else {
+        toast.current?.show({
+          severity: "error",
+          summary: "Transfer Failed",
+          detail: res.message,
+        });
+      }
+    } catch (err) {
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: "Something went wrong",
+      });
+    }
+  };
+
   return (
     <div className="flex gap-4">
       <Toast ref={toast} />
@@ -197,7 +255,11 @@ const ProductStockTransfer: React.FC = () => {
       {/* RIGHT SIDE (20%) */}
       <div className="flex-[1]">
         <div className="bg-white flex gap-3 p-4 rounded-md shadow mb-3">
-          <Button label="Transfer" className="flex-1" />
+          <Button
+            label="Transfer"
+            className="flex-1"
+            onClick={handleTransfer}
+          />
           <Button label="Download" className="flex-1" />
         </div>
         <div className="bg-white p-4 rounded-md shadow text-sm">

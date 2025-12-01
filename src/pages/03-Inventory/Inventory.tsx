@@ -237,7 +237,7 @@ const Inventory: React.FC = () => {
             <Column header="S.No" body={(_, opts) => opts.rowIndex + 1} />
             <Column header="View" body={viewTemplate} />
 
-            <Column field="branchCode" header="Unit" />
+            <Column field="refBranchCode" header="Unit" />
             <Column field="productName" header="Product Name" />
 
             <Column field="barcode" header="Barcode" sortable />

@@ -21,7 +21,7 @@ const sidebarItems = [
 ];
 
 const StockTransfer: React.FC = () => {
-  const [activeKey, setActiveKey] = useState("stockTransfer");
+  const [activeKey, setActiveKey] = useState("stockTake");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Always scroll to left on resize

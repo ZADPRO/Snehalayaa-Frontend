@@ -12,3 +12,11 @@ export const checkSKUInGRN = async (
 
   return response.data;
 };
+
+export const transferStock = async (payload: any) => {
+  const response = await api.post(
+    `${baseURL}/admin/products/new-stock-transfer`,
+    payload
+  );
+  return response.data;
+};
