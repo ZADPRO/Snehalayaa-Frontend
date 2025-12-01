@@ -7,6 +7,8 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
+import { Dialog } from "primereact/dialog";
+import { Eye } from "lucide-react";
 
 import { fetchAllInventoryProducts } from "./Inventory.function";
 import type { InventoryProduct } from "./Inventory.interface";
@@ -22,6 +24,7 @@ import {
   fetchSubCategories,
   fetchSupplier,
 } from "../../components/08-PurchaseOrderComponents/PurchaseOrderCreate/PurchaseOrderCreate.function";
+import InventoryProductDetails from "../../components/03-InventoryComponents/InventoryProductDetails/InventoryProductDetails";
 
 const Inventory: React.FC = () => {
   const toast = useRef<Toast>(null);
@@ -47,6 +50,10 @@ const Inventory: React.FC = () => {
   const [supplierFilter, setSupplierFilter] = useState<number | null>(null);
   const [branchFilter, setBranchFilter] = useState<number | null>(null);
   const [globalFilter, setGlobalFilter] = useState("");
+
+  const [viewDialogVisible, setViewDialogVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] =
+    useState<InventoryProduct | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -90,6 +97,20 @@ const Inventory: React.FC = () => {
   // Fallback renderer: "-" when value is empty
   const fallback = (val: any) =>
     val === null || val === "" || val === undefined ? "-" : val;
+
+  const viewTemplate = (row: InventoryProduct) => {
+    return (
+      <button
+        onClick={() => {
+          setSelectedProduct(row);
+          setViewDialogVisible(true);
+        }}
+        className="p-2 rounded hover:bg-gray-200"
+      >
+        <Eye size={15} color="#6f1e60" />
+      </button>
+    );
+  };
 
   return (
     <div>
@@ -198,13 +219,13 @@ const Inventory: React.FC = () => {
             value={filteredInventory}
             loading={loading}
             paginator
-            rows={20}
+            rows={15}
             showGridlines
             stripedRows
-            rowsPerPageOptions={[20, 50, 100]}
+            rowsPerPageOptions={[15, 30, 50]}
           >
             <Column header="S.No" body={(_, opts) => opts.rowIndex + 1} />
-            <Column header="View" />
+            <Column header="View" body={viewTemplate} />
 
             <Column field="branchCode" header="Unit" />
             <Column field="productName" header="Product Name" />
@@ -233,6 +254,15 @@ const Inventory: React.FC = () => {
           </DataTable>
         </div>
       </div>
+      <Dialog
+        header="Product Details"
+        visible={viewDialogVisible}
+        onHide={() => setViewDialogVisible(false)}
+        maximizable
+        style={{ width: "60vw" }}
+      >
+        <InventoryProductDetails product={selectedProduct} />
+      </Dialog>
     </div>
   );
 };
