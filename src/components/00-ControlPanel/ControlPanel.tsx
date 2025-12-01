@@ -21,6 +21,7 @@ import {
   ListPlus,
   Split,
   Trophy,
+  Monitor,
   // UserStar,
 } from "lucide-react";
 
@@ -99,6 +100,11 @@ const ControlPanel: React.FC = () => {
       name: "Nivas",
       route: "/nivas",
       icon: <Trophy size={52} className="icon-spin" strokeWidth={1} />,
+    },
+    {
+      name: "POS",
+      route: "/pos",
+      icon: <Monitor size={52} className="icon-spin" strokeWidth={1} />,
     },
   ];
 

@@ -1,21 +1,22 @@
+export interface InventoryImage {
+  fileName: string;
+  viewURL: string;
+}
+
 export interface InventoryProduct {
   id: number;
   barcode: string;
   productId: number;
   productName: string;
+
   grnId: number;
   grnNumber: string;
-  branchId: number;
-  branchCode: string;
-  refBranchCode: string;
-  refBranchName: string;
-  poCreatedDate: string;
-  poSupplierId: number;
-  supplierName: string;
+  poSupplierId: number | null;
   categoryId: number | null;
-  categoryName: string | null;
+  categoryName: string;
   subCategoryId: number | null;
-  subCategoryName: string | null;
+  subCategoryName: string;
+  branchId: number | null;
   designId: number | null;
   designName: string;
   patternId: number | null;
@@ -31,8 +32,12 @@ export interface InventoryProduct {
   marginPercent: string | number;
   discountPercent: string | number | null;
   discountAmount: string | number | null;
-  productImage: string | null;
-  imageSku: string | null;
+
+  supplierName: string;
+  refBranchName: string;
+  refBranchCode: string;
+
   createdAt: string;
   createdBy: string;
+  images: InventoryImage[]; // NEW
 }

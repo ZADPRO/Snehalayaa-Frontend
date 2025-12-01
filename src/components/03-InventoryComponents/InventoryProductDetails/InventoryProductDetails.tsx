@@ -1,11 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import type { InventoryProduct } from "../../../pages/03-Inventory/Inventory.interface";
+import { Dialog } from "primereact/dialog";
 
 interface Props {
   product: InventoryProduct | null;
 }
 
 const InventoryProductDetails: React.FC<Props> = ({ product }) => {
+  const [fullscreenVisible, setFullscreenVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
   if (!product) return <p>No product selected</p>;
 
   return (
@@ -15,7 +19,8 @@ const InventoryProductDetails: React.FC<Props> = ({ product }) => {
         <span className="text-gray-500">({product.barcode})</span>
       </h3>
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* ==== PRODUCT INFO ==== */}
+      <div className="grid grid-cols-2 gap-3 text-sm">
         <p>
           <b>Barcode:</b> {product.barcode}
         </p>
@@ -77,19 +82,46 @@ const InventoryProductDetails: React.FC<Props> = ({ product }) => {
         </p>
       </div>
 
-      {/* Image Section */}
+      {/* ==== IMAGE GALLERY ==== */}
       <div className="mt-4">
-        <p className="font-semibold mb-2">Product Image:</p>
-        {product.productImage ? (
-          <img
-            src={`YOUR_CDN_URL/${product.productImage}`}
-            alt="Product"
-            className="w-48 h-48 rounded shadow object-cover"
-          />
+        <p className="font-semibold mb-2">Product Images:</p>
+
+        {product.images && product.images.length > 0 ? (
+          <div className="grid grid-cols-5 gap-3">
+            {product.images.map((img, index) => (
+              <img
+                key={index}
+                src={img.viewURL}
+                alt="Product"
+                className="w-full h-28 object-cover rounded cursor-pointer shadow-md hover:scale-105 transition"
+                onClick={() => {
+                  setSelectedImage(img.viewURL);
+                  setFullscreenVisible(true);
+                }}
+              />
+            ))}
+          </div>
         ) : (
-          <p className="text-gray-500 italic">No image available</p>
+          <p className="text-gray-500 italic">No images available</p>
         )}
       </div>
+
+      <Dialog
+        visible={fullscreenVisible}
+        onHide={() => setFullscreenVisible(false)}
+        header="Image Preview"
+        maximizable
+        modal
+        style={{ width: "80vw" }}
+      >
+        {selectedImage && (
+          <img
+            src={selectedImage}
+            className="w-full h-auto rounded shadow-lg"
+            alt="Preview"
+          />
+        )}
+      </Dialog>
     </div>
   );
 };

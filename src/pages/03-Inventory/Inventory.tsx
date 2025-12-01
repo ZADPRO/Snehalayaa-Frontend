@@ -25,6 +25,7 @@ import {
   fetchSupplier,
 } from "../../components/08-PurchaseOrderComponents/PurchaseOrderCreate/PurchaseOrderCreate.function";
 import InventoryProductDetails from "../../components/03-InventoryComponents/InventoryProductDetails/InventoryProductDetails";
+import { fetchInventoryProductBySKU } from "../../components/03-InventoryComponents/InventoryProductDetails/InventoryProductDetails.function";
 
 const Inventory: React.FC = () => {
   const toast = useRef<Toast>(null);
@@ -101,9 +102,18 @@ const Inventory: React.FC = () => {
   const viewTemplate = (row: InventoryProduct) => {
     return (
       <button
-        onClick={() => {
-          setSelectedProduct(row);
-          setViewDialogVisible(true);
+        onClick={async () => {
+          try {
+            const data = await fetchInventoryProductBySKU(row.barcode);
+            setSelectedProduct(data);
+            setViewDialogVisible(true);
+          } catch (err: any) {
+            toast.current?.show({
+              severity: "error",
+              summary: "Error",
+              detail: err.message,
+            });
+          }
         }}
         className="p-2 rounded hover:bg-gray-200"
       >
