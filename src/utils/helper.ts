@@ -1,5 +1,5 @@
 export const baseURL = import.meta.env.VITE_API_URL;
-export const baseURLV2 = "https://snehalayaa.brightoncloudtech.com/api/v2";
+export const baseURLV2 = import.meta.env.VITE_API_URL;
 // export const baseURL = 'http://192.168.29.236:8080/api/v1'
 // export const baseURL = 'http://192.168.29.236:8080/api/v1'
 // export const baseURL = 'http://192.168.29.236:8080/api/v1'

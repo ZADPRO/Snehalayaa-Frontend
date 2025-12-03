@@ -22,6 +22,8 @@ import {
   Split,
   Trophy,
   Monitor,
+  BarChart3,
+  Boxes,
   // UserStar,
 } from "lucide-react";
 
@@ -105,6 +107,16 @@ const ControlPanel: React.FC = () => {
       name: "POS",
       route: "/pos",
       icon: <Monitor size={52} className="icon-spin" strokeWidth={1} />,
+    },
+    {
+      name: "Reports",
+      route: "/reports",
+      icon: <BarChart3 size={52} className="icon-spin" strokeWidth={1} />,
+    },
+    {
+      name: "Bundle In & Out",
+      route: "/bundles",
+      icon: <Boxes size={52} className="icon-spin" strokeWidth={1} />,
     },
   ];
 
