@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
+  CircleEqual,
   FolderKanban,
   FolderTree,
   Package,
@@ -17,6 +18,7 @@ import ProductSettingsProdCombo from "../../components/10-ProductSettingsCompone
 import "./ProductSettings.css";
 import ProductSettingsDesignColorSize from "../../components/10-ProductSettingsComponents/ProductSettingsDesignColorSize/ProductSettingsDesignColorSize";
 import ProductSettingsPatternVarient from "../../components/10-ProductSettingsComponents/ProductSettingsPatternVarient/ProductSettingsPatternVarient";
+import ProductSettingsRoundOff from "../../components/10-ProductSettingsComponents/ProductSettingsRoundOff/ProductSettingsRoundOff";
 
 const sidebarItems = [
   {
@@ -49,10 +51,16 @@ const sidebarItems = [
     icon: <Shapes size={20} />,
     component: <ProductSettingsPatternVarient />,
   },
+  {
+    key: "roundOff",
+    label: "Round Off",
+    icon: <CircleEqual size={20} />,
+    component: <ProductSettingsRoundOff />,
+  },
 ];
 
 const ProductSettings: React.FC = () => {
-  const [activeKey, setActiveKey] = useState("categories");
+  const [activeKey, setActiveKey] = useState("roundOff");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Always scroll to left on resize

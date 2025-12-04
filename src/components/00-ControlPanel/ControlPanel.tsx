@@ -24,6 +24,8 @@ import {
   Monitor,
   BarChart3,
   Boxes,
+  Bug,
+  PackageCheck,
   // UserStar,
 } from "lucide-react";
 
@@ -45,6 +47,11 @@ const ControlPanel: React.FC = () => {
       name: "Stock Transfers",
       route: "/stock-transfer",
       icon: <ArrowLeftRight size={52} className="icon-spin" strokeWidth={1} />,
+    },
+    {
+      name: "Stock In Take",
+      route: "/stock-intake",
+      icon: <PackageCheck size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Image Upload",
@@ -99,11 +106,6 @@ const ControlPanel: React.FC = () => {
       icon: <Split size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
-      name: "Nivas",
-      route: "/nivas",
-      icon: <Trophy size={52} className="icon-spin" strokeWidth={1} />,
-    },
-    {
       name: "POS",
       route: "/pos",
       icon: <Monitor size={52} className="icon-spin" strokeWidth={1} />,
@@ -114,9 +116,19 @@ const ControlPanel: React.FC = () => {
       icon: <BarChart3 size={52} className="icon-spin" strokeWidth={1} />,
     },
     {
+      name: "Nivas",
+      route: "/nivas",
+      icon: <Trophy size={52} className="icon-spin" strokeWidth={1} />,
+    },
+    {
       name: "Bundle In & Out",
       route: "/bundles",
       icon: <Boxes size={52} className="icon-spin" strokeWidth={1} />,
+    },
+    {
+      name: "Issues & Bugs",
+      route: "/issues",
+      icon: <Bug size={52} className="icon-spin" strokeWidth={1} />,
     },
   ];
 
