@@ -590,8 +590,8 @@ const PurchaseOrderCreate: React.FC = () => {
           )}
 
           {/* Payment & Shipping Fee */}
-          <div className="mt-3 flex flex-col gap-2">
-            <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
+            <div className="gap-2 hidden">
               <div className="flex-1">
                 <span className="block text-xs text-gray-600 mb-1">
                   Payment Fee
