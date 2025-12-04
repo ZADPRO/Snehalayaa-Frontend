@@ -2,18 +2,18 @@ import React, { useState, useRef, useEffect } from "react";
 import { ArrowLeftRight, User } from "lucide-react";
 
 import backgroundImage from "../../assets/background/bg.png";
-import ProductStockTransfer from "../../components/04-StockTransferComponents/StockTransfer/ProductStockTransfer";
+import ProductStockIntake from "../../components/04-StockTransferComponents/StockInTake/ProductStockIntake";
 
 const sidebarItems = [
   {
     key: "stockTransfer",
-    label: "Stock Transfer",
+    label: "Stock in Take",
     icon: <ArrowLeftRight size={20} />,
-    component: <ProductStockTransfer />,
+    component: <ProductStockIntake />,
   },
 ];
 
-const StockTransfer: React.FC = () => {
+const StockInTake: React.FC = () => {
   const [activeKey, setActiveKey] = useState("stockTransfer");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -76,4 +76,4 @@ const StockTransfer: React.FC = () => {
   );
 };
 
-export default StockTransfer;
+export default StockInTake;

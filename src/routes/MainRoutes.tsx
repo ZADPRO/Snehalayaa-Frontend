@@ -18,6 +18,7 @@ import Attributes from "../pages/13-Attributes/Attributes";
 import Branches from "../pages/14-Branches/Branches";
 import POS from "../pages/15-POS/POS";
 import Reports from "../pages/16-Reports/Reports";
+import StockInTake from "../pages/04-StockTransfer/StockInTake";
 
 const MainRoutes: React.FC = () => {
   return (
@@ -32,6 +33,7 @@ const MainRoutes: React.FC = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/stock-transfer" element={<StockTransfer />} />
+        <Route path="/stock-intake" element={<StockInTake />} />
         <Route path="/image-upload" element={<ImageUpload />} />
         <Route path="/shopify" element={<Shopify />} />
         <Route path="/catalogs" element={<Catalogs />} />
