@@ -16,6 +16,8 @@ import Employees from "../pages/11-Employees/Employees";
 import SupplierCustomers from "../pages/12-SupplierCustomers/SupplierCustomers";
 import Attributes from "../pages/13-Attributes/Attributes";
 import Branches from "../pages/14-Branches/Branches";
+import POS from "../pages/15-POS/POS";
+import Reports from "../pages/16-Reports/Reports";
 
 const MainRoutes: React.FC = () => {
   return (
@@ -40,6 +42,8 @@ const MainRoutes: React.FC = () => {
         <Route path="/supplier-customers" element={<SupplierCustomers />} />
         <Route path="/attributes" element={<Attributes />} />
         <Route path="/branches" element={<Branches />} />
+        <Route path="/pos" element={<POS />} />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
     </div>
   );
