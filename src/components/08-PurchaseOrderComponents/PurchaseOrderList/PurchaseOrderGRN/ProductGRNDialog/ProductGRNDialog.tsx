@@ -90,7 +90,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
     return { id, name: opt?.label ?? "" };
   };
 
-  // load masters & round-off rules
   const loadMaster = async () => {
     try {
       const prods = await getProducts();
@@ -125,7 +124,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
     try {
       const res = await api.get(`${baseURL}/admin/settings/round-off`);
       if (res.data?.status) {
-        // ensure prices are numbers and sort ascending
         const rules = (res.data.data || []).map((r: any) => ({
           ...r,
           prices: (r.prices || [])
@@ -145,7 +143,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
     fetchRoundOff();
   }, []);
 
-  // set HSN automatically when product changes
   useEffect(() => {
     if (!product) {
       setHsn("");
@@ -155,7 +152,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
     setHsn(selectedProd?.hsnCode || "");
   }, [product, productDetails]);
 
-  // auto-generate rows when quantity changes
   useEffect(() => {
     if (!quantity || quantity <= 0) {
       setRows([]);
@@ -163,7 +159,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
       return;
     }
 
-    // limit to receivedQty
     const maxAllowed = receivedQty ?? Number.POSITIVE_INFINITY;
     const qtyToCreate = Math.min(quantity, maxAllowed);
 
@@ -186,10 +181,8 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
         .fill(null)
         .map(() => createRef<any>())
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quantity, lineNo, cost, profit, qtyInMeters, productDetails]);
 
-  // apply round-off to a raw mrp using rules (first price >= mrp; else last)
   const applyRoundOff = (mrp: number) => {
     if (!roundOffRules || roundOffRules.length === 0) return mrp;
 
@@ -198,11 +191,17 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
       const to = Number(rule.toRange || Number.POSITIVE_INFINITY);
 
       if (mrp >= from && mrp <= to) {
-        // prices sorted ascending
-        const p = rule.prices.find((price) => mrp <= price);
-        return p ?? rule.prices[rule.prices.length - 1] ?? mrp;
+        // PRICES ARRAY MUST BE ASCENDING
+        const sortedPrices = [...rule.prices].sort((a, b) => a - b);
+
+        // Always take NEXT HIGHER value
+        const next = sortedPrices.find((p) => p > mrp);
+
+        // If no higher price exists, fallback to the highest one
+        return next ?? sortedPrices[sortedPrices.length - 1];
       }
     }
+
     return mrp;
   };
 
