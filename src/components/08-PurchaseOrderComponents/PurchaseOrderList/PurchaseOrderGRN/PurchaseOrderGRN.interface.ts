@@ -1,3 +1,51 @@
+export interface GRNItemResponse {
+  grnItemId: number;
+  grnId: number;
+  purchaseOrderId: number;
+
+  supplierId: number;
+  supplierName: string;
+
+  branchid: number;
+  branchCode: string;
+
+  poNumber: string;
+  grnDate: string;
+
+  lineNo: string;
+  refNo: string;
+
+  productId: number;
+  productName: string;
+
+  designId: number;
+  designName: string;
+
+  patternId: number;
+  patternName: string;
+
+  varientId: number;
+  varientName: string; // YOU SAID → need to check only with varientName
+
+  colorId: number;
+  colorName: string;
+
+  sizeId: number;
+  sizeName: string;
+
+  cost: string;
+  profitPercent: string;
+  total: string;
+
+  quantity: number;
+  sku: string;
+
+  productBranchId: number;
+
+  itemcreatedat: string;
+  itemupdatedat: string | null;
+}
+
 export interface Category {
   refCategoryId: number;
   categoryName: string;

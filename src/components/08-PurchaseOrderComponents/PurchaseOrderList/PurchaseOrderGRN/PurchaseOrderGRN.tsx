@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { PurchaseOrderListItem } from "../PurchaseOrderList.interface";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
@@ -8,7 +8,7 @@ import { InputNumber } from "primereact/inputnumber";
 import ProductGRNDialog from "./ProductGRNDialog/ProductGRNDialog";
 import ProductGRNInvoice from "./ProductGRNInvoice/ProductGRNInvoice";
 import { Divider } from "primereact/divider";
-import { createGRN } from "./PurchaseOrderGRN.function";
+import { createGRN, fetchGRNItemsByPO } from "./PurchaseOrderGRN.function";
 
 interface Props {
   selectedPO: PurchaseOrderListItem | null;
@@ -19,6 +19,8 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
   const [receivedQty, setReceivedQty] = useState<number | null>(null);
   const [showGRNDialog, setShowGRNDialog] = useState(false);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+
+  const [existingGRNItems, setExistingGRNItems] = useState<any[]>([]);
 
   // GRN data returned from child
   const [grnData, setGrnData] = useState<{
@@ -44,7 +46,7 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
   }) => {
     const finalPayload = {
       ...payload,
-      branchId: selectedPO.refBranchId, // ✅ ADD THIS
+      branchId: selectedPO.refBranchId,
     };
 
     console.log("✅ GRN DATA RECEIVED IN PARENT:", finalPayload);
@@ -52,7 +54,24 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
     setShowGRNDialog(false);
   };
 
-  const productRows = grnData?.items ?? [];
+  const productRows = grnData?.items?.length ? grnData.items : existingGRNItems;
+
+  const remainingQty = selectedPO.totalorderedqty - selectedPO.totalreceivedqty;
+
+  const fetchExistingGRN = async () => {
+    try {
+      const items = await fetchGRNItemsByPO(selectedPO.id);
+      console.log("items", items);
+      setExistingGRNItems(items);
+    } catch (err) {
+      console.error("Failed to fetch GRN items", err);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedPO) return;
+    fetchExistingGRN();
+  }, [selectedPO]);
 
   return (
     <div className="">
@@ -89,10 +108,16 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
 
           <InputNumber
             value={receivedQty || undefined}
-            onValueChange={(e) => setReceivedQty(e.value ?? null)}
+            onValueChange={(e) => {
+              let value = e.value ?? 0;
+              if (value > remainingQty) {
+                value = remainingQty;
+              }
+              setReceivedQty(value);
+            }}
             placeholder="0"
             min={1}
-            max={selectedPO.totalorderedqty}
+            max={remainingQty}
             className="w-32"
           />
         </div>

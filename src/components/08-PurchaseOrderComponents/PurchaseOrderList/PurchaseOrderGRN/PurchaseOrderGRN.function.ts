@@ -1,5 +1,7 @@
 import axios from "axios";
 import { baseURL } from "../../../../utils/helper";
+import api from "../../../../utils/api";
+import type { GRNItemResponse } from "./PurchaseOrderGRN.interface";
 
 export interface GRNItemPayload {
   sNo: number;
@@ -25,6 +27,20 @@ export interface GRNPayload {
   branchId: number;
   items: GRNItemPayload[];
 }
+
+export const fetchGRNItemsByPO = async (
+  poId: number
+): Promise<GRNItemResponse[]> => {
+  const response = await api.get(
+    `${baseURL}/admin/purchaseOrder/purchase-order/grn/items/${poId}`
+  );
+
+  if (response.data?.status) {
+    return response.data.data as GRNItemResponse[];
+  } else {
+    throw new Error(response.data?.message || "Failed to fetch GRN items");
+  }
+};
 
 export const createGRN = async (payload: GRNPayload): Promise<any> => {
   const response = await axios.post(
