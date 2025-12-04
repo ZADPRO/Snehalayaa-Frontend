@@ -13,6 +13,8 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 
 import { scanSKUService } from "./POS.function";
+import { Divider } from "primereact/divider";
+import { fetchEmployees } from "../../components/12-SupplierCustomerComponents/EmployeeComponents/ViewDeleteEmployees.function";
 
 const paymentOptions = [
   { label: "Cash", value: "cash" },
@@ -29,6 +31,11 @@ const POS: React.FC = () => {
 
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
+
+  // Employee Dialog
+  const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
 
   // Customer Dialog
   const [showCustomerDialog, setShowCustomerDialog] = useState(false);
@@ -52,9 +59,6 @@ const POS: React.FC = () => {
     0
   );
 
-  // ================================
-  // SCAN SKU
-  // ================================
   const handleScan = async (e: any) => {
     if (e.key === "Enter") {
       const skuValue = e.target.value.trim();
@@ -97,11 +101,16 @@ const POS: React.FC = () => {
     }
   };
 
-  // ================================
-  // DELETE ROW
-  // ================================
   const deleteRow = (rowData: any) => {
-    setProducts(products.filter((p) => p.id !== rowData.id));
+    const filtered = products.filter((p) => p.id !== rowData.id);
+
+    // Reindex IDs properly
+    const reIndexed = filtered.map((item, index) => ({
+      ...item,
+      id: index + 1,
+    }));
+
+    setProducts(reIndexed);
   };
 
   const deleteButtonTemplate = (rowData: any) => (
@@ -114,22 +123,33 @@ const POS: React.FC = () => {
     />
   );
 
-  // ================================
-  // ALERT
-  // ================================
   const showPrimeAlert = (msg: string) => {
     setAlertMessage(msg);
     setShowAlert(true);
   };
 
-  // ================================
-  // PAYMENT HANDLING
-  // ================================
   const handlePaymentChange = (method: string, value: any) => {
     setPaymentValues((prev: any) => ({
       ...prev,
       [method]: value,
     }));
+  };
+
+  const resetPOS = () => {
+    setProducts([]);
+    setSelectedProduct(null);
+    setCustomerData({
+      firstName: "",
+      lastName: "",
+      mobile: "",
+      email: "",
+      district: "",
+    });
+    setSelectedEmployee(null);
+    setSelectedPaymentMethods([]);
+    setPaymentValues({});
+    setSku("");
+    setShowSidebar(false);
   };
 
   const totalPaid =
@@ -140,9 +160,79 @@ const POS: React.FC = () => {
 
   const balance = totalPaid - totalAmount;
 
-  // ================================
-  // RENDER
-  // ================================
+  const updateDiscount = (id: number, discount: number) => {
+    const updated = products.map((item) => {
+      if (item.id === id) {
+        return { ...item, discountPercent: discount };
+      }
+      return item;
+    });
+
+    setProducts(updated);
+  };
+
+  const openEmployeeDialog = async () => {
+    try {
+      const list = await fetchEmployees(); // your API call
+      setEmployees(list);
+      setShowEmployeeDialog(true);
+    } catch (err: any) {
+      showPrimeAlert("Failed to load employees");
+    }
+  };
+
+  <Button
+    label="Add Employee"
+    className="p-button-secondary"
+    onClick={() => openEmployeeDialog()}
+  />;
+
+  const saveOrder = () => {
+    if (!products.length) {
+      showPrimeAlert("No products added");
+      return;
+    }
+
+    const payload = {
+      customer: customerData,
+      employee: selectedEmployee
+        ? {
+            id: selectedEmployee.RefUserId,
+            name: `${selectedEmployee.RefUserFName} ${selectedEmployee.RefUserLName}`,
+            designation: selectedEmployee.RefUserDesignation,
+            branchId: selectedEmployee.RefUserBranchId,
+            mobile: selectedEmployee.mobile,
+          }
+        : null,
+
+      items: products.map((p) => ({
+        sku: p.sku,
+        productName: p.name,
+        qty: p.qty,
+        unitPrice: p.price,
+        discountPercent: p.discountPercent,
+        total: p.price * p.qty - (p.price * p.qty * p.discountPercent) / 100,
+      })),
+
+      payment: {
+        methods: selectedPaymentMethods,
+        values: paymentValues,
+        totalPaid,
+        balance,
+      },
+
+      summary: {
+        totalAmount,
+        totalItems: products.length,
+      },
+    };
+
+    console.log("FINAL PAYLOAD TO SAVE:", payload);
+
+    showPrimeAlert("Order Saved Successfully");
+    resetPOS();
+  };
+
   return (
     <div
       className="ps-container"
@@ -191,7 +281,29 @@ const POS: React.FC = () => {
               <Column field="name" header="Name" />
               <Column field="price" header="Price" />
               <Column field="qty" header="Qty" />
-              <Column field="discountPercent" header="Discount %" />
+              <Column
+                header="Discount %"
+                body={(rowData) => (
+                  <InputNumber
+                    value={rowData.discountPercent}
+                    onValueChange={(e) =>
+                      updateDiscount(rowData.id, e.value || 0)
+                    }
+                    min={0}
+                    max={100}
+                  />
+                )}
+              />
+              <Column
+                header="Total Price"
+                body={(row) =>
+                  (
+                    row.price * row.qty -
+                    (row.price * row.qty * row.discountPercent) / 100
+                  ).toFixed(2)
+                }
+              />
+
               <Column header="Delete" body={deleteButtonTemplate} />
             </DataTable>
           </div>
@@ -199,12 +311,22 @@ const POS: React.FC = () => {
           {/* FOOTER */}
           <div className="bg-white p-4 rounded shadow space-y-3 mt-auto">
             <div className="flex gap-3">
-              <InputText placeholder="Enter Customer Name" className="w-full" />
-              <Button
-                label="Add Customer"
-                className="p-button-info"
-                onClick={() => setShowCustomerDialog(true)}
-              />
+              <div className="flex gap-3">
+                <InputText
+                  placeholder="Enter Customer Name"
+                  className="w-full"
+                />
+                <Button
+                  label="Add Customer"
+                  className="p-button-info"
+                  onClick={() => setShowCustomerDialog(true)}
+                />
+                <Button
+                  label="Add Employee"
+                  className="p-button-secondary"
+                  onClick={() => openEmployeeDialog()}
+                />
+              </div>
             </div>
 
             <p>
@@ -286,10 +408,10 @@ const POS: React.FC = () => {
         position="right"
         onHide={() => setShowSidebar(false)}
         style={{ width: "50vw" }}
-        className="p-4"
+        header="Payment"
+        className="p-2"
       >
-        <h3 className="font-semibold mb-4">Payment</h3>
-
+        <Divider />
         <b>Total Amount: {totalAmount}</b>
 
         <p className="mt-3">Select Payment Methods</p>
@@ -319,7 +441,11 @@ const POS: React.FC = () => {
           </span>
         </p>
 
-        <Button label="Save Order" className="w-full mt-4 p-button-success" />
+        <Button
+          label="Save Order"
+          className="w-full mt-4 p-button-success"
+          onClick={saveOrder}
+        />
       </Sidebar>
 
       {/* ALERT DIALOG */}
@@ -338,7 +464,7 @@ const POS: React.FC = () => {
         onHide={() => setShowCustomerDialog(false)}
         style={{ width: "30vw" }}
       >
-        <div className="space-y-5">
+        <div className="space-y-5 mt-3">
           {/* First Name */}
           <FloatLabel className="always-float">
             <InputText
@@ -403,6 +529,44 @@ const POS: React.FC = () => {
             label="Save Customer"
             className="w-full p-button-success"
             onClick={() => setShowCustomerDialog(false)}
+          />
+        </div>
+      </Dialog>
+
+      <Dialog
+        header="Select Employee"
+        visible={showEmployeeDialog}
+        onHide={() => setShowEmployeeDialog(false)}
+        style={{ width: "30vw" }}
+      >
+        <div className="space-y-4 mt-3">
+          <FloatLabel className="always-float">
+            <select
+              className="p-inputtext p-component w-full p-2 border rounded"
+              value={selectedEmployee?.RefUserId || ""}
+              onChange={(e) => {
+                const emp = employees.find(
+                  (item) => item.RefUserId === Number(e.target.value)
+                );
+                setSelectedEmployee(emp);
+              }}
+            >
+              <option value="">Select Employee</option>
+              {employees.map((emp) => (
+                <option key={emp.RefUserId} value={emp.RefUserId}>
+                  {emp.RefUserFName} {emp.RefUserLName} -{" "}
+                  {emp.RefUserDesignation}
+                </option>
+              ))}
+            </select>
+
+            <label>Select Employee</label>
+          </FloatLabel>
+
+          <Button
+            label="Save Employee"
+            className="w-full p-button-success"
+            onClick={() => setShowEmployeeDialog(false)}
           />
         </div>
       </Dialog>
