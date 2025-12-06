@@ -22,7 +22,7 @@ import type {
   BillItem,
   FormState,
 } from "./AddEditBundleInwards.interface";
-import { createBundle } from "./AddEditBundleInwards.function";
+import { createBundle, updateBundle } from "./AddEditBundleInwards.function";
 
 const receivingTypeOptions = [
   { name: "Done", code: "done" },
@@ -41,6 +41,7 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
 }) => {
   console.log("editData", editData);
   const toast = useRef<Toast | null>(null);
+  const isEditMode = Boolean(editData);
 
   const [poDetails, setPODetails] = useState<PurchaseOrderListItem[]>([]);
   const [supplierDetails, setSupplierDetails] = useState<Supplier[]>([]);
@@ -229,11 +230,12 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
     }
 
     const payload = {
+      id: editData?.inward_id ?? null,
       poId: formData.poId,
 
       poDetails: {
         poDate: formData.poDate ? String(formData.poDate) : "",
-        supplierId: formData.supplierId, // number ✔
+        supplierId: formData.supplierId,
         location: String(formData.location ?? ""),
         poValue: String(formData.poValue ?? "0"),
         receivingType: String(formData.receivingType ?? ""),
@@ -264,15 +266,36 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
 
     console.log("Payload to send:", payload);
 
-    const result = await createBundle(payload);
-    console.log("result", result);
+    try {
+      let result;
 
-    toast.current?.show({
-      severity: "success",
-      summary: "Saved",
-      detail: "Payload prepared and logged to console (replace with API)",
-    });
-    onSuccess();
+      if (isEditMode) {
+        // ⬅️ UPDATE
+        result = await updateBundle(payload);
+        toast.current?.show({
+          severity: "success",
+          summary: "Updated",
+          detail: "Bundle updated successfully",
+        });
+      } else {
+        // ⬅️ CREATE
+        result = await createBundle(payload);
+        toast.current?.show({
+          severity: "success",
+          summary: "Saved",
+          detail: "Bundle created successfully",
+        });
+      }
+
+      console.log("API Result:", result);
+      onSuccess();
+    } catch (err: any) {
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: err?.message || "Something went wrong",
+      });
+    }
   };
 
   const billDateBody = (row: BillItem) =>
@@ -679,7 +702,7 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
             onClick={() => setPreviewVisible(true)}
           />
           <Button
-            label="Save"
+            label={isEditMode ? "Update" : "Save"}
             icon={<Check />}
             className="bg-[#8e5ea8] border-none gap-2"
             onClick={handleSaveAll}

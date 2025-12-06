@@ -17,3 +17,20 @@ export const createBundle = async (payload: any): Promise<any> => {
 
   return response.data;
 };
+
+export const updateBundle = async (payload: any): Promise<any> => {
+  const token = localStorage.getItem("token") || "";
+
+  const response = await axios.put(
+    `${baseURL}/admin/products/updateBundle`,
+    payload,
+    {
+      headers: {
+        Authorization: token,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
