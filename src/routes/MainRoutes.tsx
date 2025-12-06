@@ -19,6 +19,9 @@ import Branches from "../pages/14-Branches/Branches";
 import POS from "../pages/15-POS/POS";
 import Reports from "../pages/16-Reports/Reports";
 import StockInTake from "../pages/04-StockTransfer/StockInTake";
+import Nivas from "../pages/17-Nivas/Nivas";
+import BundleInOut from "../pages/18-BundleInOut/BundleInOut";
+import IssuesAndBugs from "../pages/19-IssuesAndBugs/IssuesAndBugs";
 
 const MainRoutes: React.FC = () => {
   return (
@@ -46,6 +49,9 @@ const MainRoutes: React.FC = () => {
         <Route path="/branches" element={<Branches />} />
         <Route path="/pos" element={<POS />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/nivas" element={<Nivas />} />
+        <Route path="/bundles" element={<BundleInOut />} />
+        <Route path="/issues" element={<IssuesAndBugs />} />
       </Routes>
     </div>
   );

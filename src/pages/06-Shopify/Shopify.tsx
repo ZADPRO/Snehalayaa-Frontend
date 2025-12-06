@@ -13,8 +13,8 @@ const Shopify: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const data = await fetchShopifyProducts();
-      setProducts(data);
+      const response = await fetchShopifyProducts(); // API call
+      setProducts(response); // API returns array → store properly
     } catch (err) {
       console.error("Error fetching Shopify products:", err);
     } finally {
@@ -38,6 +38,7 @@ const Shopify: React.FC = () => {
           backgroundPosition: "center",
         }}
       >
+        {/* TOP BAR */}
         <div className="ps-topbar">
           <div className="ps-left">
             <button
@@ -65,13 +66,32 @@ const Shopify: React.FC = () => {
             showGridlines
             className="shadow bg-white"
           >
-            <Column field="id" header="ID" />
-            <Column field="title" header="Title" />
-            <Column field="sku" header="SKU" />
-            <Column field="price" header="Price" />
-            <Column field="stock" header="Stock" />
-            <Column field="vendor" header="Vendor" />
-            <Column field="status" header="Status" />
+            <Column header="S.No" body={(_, { rowIndex }) => rowIndex + 1} />
+
+            <Column field="productName" header="Product Name" />
+            <Column field="barcode" header="Barcode / SKU" />
+            <Column field="categoryName" header="Category" />
+            <Column field="subCategoryName" header="Sub Category" />
+
+            <Column field="designName" header="Design" />
+            <Column field="patternName" header="Pattern" />
+            <Column field="colorName" header="Color" />
+            <Column field="sizeName" header="Size" />
+            <Column field="varientName" header="Variant" />
+
+            <Column field="unitCost" header="Cost" />
+            <Column field="marginPercent" header="Margin %" />
+            <Column field="totalAmount" header="Total Amount" />
+
+            <Column field="quantity" header="Stock Qty" />
+
+            <Column
+              header="Branch"
+              body={(row) => `${row.refBranchName} (${row.refBranchCode})`}
+            />
+
+            <Column field="grnNumber" header="GRN Number" />
+            <Column field="createdAt" header="Created At" />
           </DataTable>
         </div>
       </div>

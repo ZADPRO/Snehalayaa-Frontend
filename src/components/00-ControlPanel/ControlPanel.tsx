@@ -36,99 +36,99 @@ const ControlPanel: React.FC = () => {
     {
       name: "Dashboard",
       route: "/dashboard",
-      icon: <LayoutDashboard size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <LayoutDashboard size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Inventory",
       route: "/inventory",
-      icon: <Box size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <Box size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Stock Transfers",
       route: "/stock-transfer",
-      icon: <ArrowLeftRight size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <ArrowLeftRight size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Stock In Take",
       route: "/stock-intake",
-      icon: <PackageCheck size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <PackageCheck size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Image Upload",
       route: "/image-upload",
-      icon: <ImageUp size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <ImageUp size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Shopify",
       route: "/shopify",
-      icon: <ShoppingBag size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <ShoppingBag size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Catalogs",
       route: "/catalogs",
-      icon: <ListCheck size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <ListCheck size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Purchase Order",
       route: "/purchase-order",
-      icon: <ShoppingCart size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <ShoppingCart size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Debit Note",
       route: "/debit-note",
       icon: (
-        <BanknoteArrowDown size={52} className="icon-spin" strokeWidth={1} />
+        <BanknoteArrowDown size={45} className="icon-spin" strokeWidth={1} />
       ),
     },
     {
       name: "Product Settings",
       route: "/product-settings",
-      icon: <Bolt size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <Bolt size={45} className="icon-spin" strokeWidth={1} />,
     },
     // {
     //   name: "Employees",
     //   route: "/employees",
-    //   icon: <IdCardLanyard size={52} className="icon-spin" strokeWidth={1} />,
+    //   icon: <IdCardLanyard size={45} className="icon-spin" strokeWidth={1} />,
     // },
     {
       name: "Users",
       route: "/supplier-customers",
-      icon: <IdCardLanyard size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <IdCardLanyard size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Attributes",
       route: "/attributes",
-      icon: <ListPlus size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <ListPlus size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Branches",
       route: "/branches",
-      icon: <Split size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <Split size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "POS",
       route: "/pos",
-      icon: <Monitor size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <Monitor size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Reports",
       route: "/reports",
-      icon: <BarChart3 size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <BarChart3 size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Nivas",
       route: "/nivas",
-      icon: <Trophy size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <Trophy size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Bundle In & Out",
       route: "/bundles",
-      icon: <Boxes size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <Boxes size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
       name: "Issues & Bugs",
       route: "/issues",
-      icon: <Bug size={52} className="icon-spin" strokeWidth={1} />,
+      icon: <Bug size={45} className="icon-spin" strokeWidth={1} />,
     },
   ];
 

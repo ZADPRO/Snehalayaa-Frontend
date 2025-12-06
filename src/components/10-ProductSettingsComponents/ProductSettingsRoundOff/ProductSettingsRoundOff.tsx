@@ -144,15 +144,17 @@ const ProductSettingsRoundOff: React.FC = () => {
           headerClassName="align-start-header"
           headerStyle={{ textAlign: "center", justifyContent: "flex-start" }}
         />
-        <Column field="id" header="S.No" />
-        <Column field="fromRange" header="From" />
-        <Column field="toRange" header="To" />
+        <Column header="SNo" body={(_, opts) => opts.rowIndex + 1} />
+        <Column field="fromRange" header="From" frozen sortable />
+        <Column field="toRange" header="To" frozen sortable />
         {/* 🔥 DYNAMIC PRICE COLUMNS */}
         {Array.from({ length: maxPriceColumns }).map((_, index) => (
           <Column
             key={index}
             header={`Price ${index + 1}`}
-            body={(row) => row.prices[index] ?? ""}
+            body={(row) =>
+              row.prices[index] !== undefined ? row.prices[index] : "-"
+            }
           />
         ))}
       </DataTable>

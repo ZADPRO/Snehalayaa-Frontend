@@ -35,3 +35,24 @@ export const fetchStockTransferItems = async (id: number) => {
     throw new Error(err.message);
   }
 };
+
+export const acceptStockIntake = async (payload: {
+  toBranchId: number;
+  items: { sku: string }[];
+}) => {
+  const response = await api.post(
+    `${baseURL}/admin/purchaseOrder/acceptStockIntake`,
+    payload,
+    {
+      headers: {
+        Authorization: localStorage.getItem("token") || "",
+      },
+    }
+  );
+
+  if (response.data?.status) {
+    return response.data;
+  } else {
+    throw new Error(response.data.error || "Failed to accept stock intake");
+  }
+};

@@ -5,9 +5,11 @@ import { Toast } from "primereact/toast";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Button } from "primereact/button";
 import { Sidebar } from "primereact/sidebar";
+
 import {
   fetchStockIntakeList,
   fetchStockTransferItems,
+  acceptStockIntake, // <-- NEW API FUNCTION
 } from "./ProductStockIntake.function";
 
 const ProductStockIntake: React.FC = () => {
@@ -17,15 +19,12 @@ const ProductStockIntake: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [stockTransfers, setStockTransfers] = useState<any[]>([]);
 
-  // Sidebar states
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [selectedTransferId, setSelectedTransferId] = useState<number | null>(
-    null
-  );
-  console.log("selectedTransferId", selectedTransferId);
+  const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
   const [transferItems, setTransferItems] = useState<any[]>([]);
 
-  // Fetch master list
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+
   useEffect(() => {
     loadStockIntake();
   }, []);
@@ -46,26 +45,22 @@ const ProductStockIntake: React.FC = () => {
     }
   };
 
-  // Fetch items for a transfer
-  const openTransferItems = async (id: number) => {
-    setSelectedTransferId(id);
+  // ----------- OPEN SUB LIST (SIDEBAR) -----------
+  const openTransferItems = async (rowData: any) => {
+    setSelectedTransfer(rowData);
     setSidebarVisible(true);
+    setSelectedRows([]);
 
     try {
-      const items = await fetchStockTransferItems(id);
+      const items = await fetchStockTransferItems(rowData.id);
+      setTransferItems(
+        items.map((item: any) => ({
+          ...item,
+          status: "Pending",
+        }))
+      );
 
-      // Each item gets a status field for UI
-      const formatted = items.map((item: any) => ({
-        ...item,
-        status: "Pending", // Default
-      }));
-
-      setTransferItems(formatted);
-
-      // Focus scanner input
-      setTimeout(() => {
-        scannerRef.current?.focus();
-      }, 200);
+      setTimeout(() => scannerRef.current?.focus(), 300);
     } catch (err: any) {
       toast.current?.show({
         severity: "error",
@@ -75,13 +70,12 @@ const ProductStockIntake: React.FC = () => {
     }
   };
 
-  // Scan -> update status
+  // ----------- SCAN INPUT -----------
   const handleScan = (e: any) => {
     if (e.key === "Enter") {
       const sku = e.target.value.trim();
       e.target.value = "";
 
-      // Update UI
       setTransferItems((prev) =>
         prev.map((item) =>
           item.sku === sku ? { ...item, status: "Accepted" } : item
@@ -96,55 +90,97 @@ const ProductStockIntake: React.FC = () => {
     }
   };
 
-  // Accept All button
-  const acceptAll = () => {
-    setTransferItems((prev) =>
-      prev.map((item) => ({
-        ...item,
-        status: "Accepted",
-      }))
-    );
+  // ----------- ACCEPT ALL -----------
+  const acceptAll = async () => {
+    if (!selectedTransfer) return;
 
-    toast.current?.show({
-      severity: "success",
-      summary: "All Accepted",
-      detail: "All items marked as Accepted",
-    });
+    const payload = {
+      toBranchId: selectedTransfer.to_branch_id, // ⭐ dynamic branch
+      items: transferItems.map((item) => ({ sku: item.sku })),
+    };
+
+    try {
+      const res = await acceptStockIntake(payload);
+
+      toast.current?.show({
+        severity: "success",
+        summary: "Success",
+        detail: `All items accepted`,
+      });
+
+      setTransferItems((prev) =>
+        prev.map((item) => ({ ...item, status: "Accepted" }))
+      );
+    } catch (err: any) {
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: err.message,
+      });
+    }
+  };
+
+  // ----------- ACCEPT SELECTED -----------
+  const acceptSelected = async () => {
+    if (!selectedRows.length) {
+      toast.current?.show({
+        severity: "warn",
+        summary: "No Selection",
+        detail: "Select items first",
+      });
+      return;
+    }
+
+    const payload = {
+      toBranchId: selectedTransfer.to_branch_id, // ⭐ dynamic branch
+      items: selectedRows.map((item) => ({ sku: item.sku })),
+    };
+
+    try {
+      const res = await acceptStockIntake(payload);
+
+      toast.current?.show({
+        severity: "success",
+        summary: "Success",
+        detail: `Items accepted`,
+      });
+
+      setTransferItems((prev) =>
+        prev.map((item) =>
+          selectedRows.some((sel) => sel.sku === item.sku)
+            ? { ...item, status: "Accepted" }
+            : item
+        )
+      );
+    } catch (err: any) {
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: err.message,
+      });
+    }
   };
 
   return (
-    <div className="p-4">
+    <div>
       <Toast ref={toast} />
 
-      <h2 className="text-xl font-semibold mb-4">Stock Intake List</h2>
-
+      {/* MAIN LIST */}
       {loading ? (
         <div className="flex justify-center items-center h-40">
           <ProgressSpinner />
         </div>
       ) : (
         <DataTable value={stockTransfers} paginator rows={10} showGridlines>
-          <Column
-            header="S.No"
-            body={(_, { rowIndex }) => rowIndex + 1}
-            style={{ width: "70px" }}
-          />
+          <Column header="S.No" body={(_, { rowIndex }) => rowIndex + 1} />
           <Column field="stockTransferNumber" header="ST Number" />
           <Column
             header="From Branch"
-            body={(row) => (
-              <span>
-                {row.from_branch_name} ({row.from_branch_code})
-              </span>
-            )}
+            body={(row) => `${row.from_branch_name} (${row.from_branch_code})`}
           />
           <Column
             header="To Branch"
-            body={(row) => (
-              <span>
-                {row.to_branch_name} ({row.to_branch_code})
-              </span>
-            )}
+            body={(row) => `${row.to_branch_name} (${row.to_branch_code})`}
           />
           <Column field="created_at" header="Created At" />
           <Column field="item_count" header="Items" />
@@ -155,22 +191,21 @@ const ProductStockIntake: React.FC = () => {
                 label="View Items"
                 size="small"
                 className="p-button-info"
-                onClick={() => openTransferItems(row.id)}
+                onClick={() => openTransferItems(row)}
               />
             )}
           />
         </DataTable>
       )}
 
-      {/* 📌 SIDEBAR */}
+      {/* SIDEBAR */}
       <Sidebar
         visible={sidebarVisible}
         position="right"
         onHide={() => setSidebarVisible(false)}
-        style={{ width: "50vw" }}
+        style={{ width: "70vw" }}
         header="Stock Intake Items"
       >
-        {/* Hidden scanner input */}
         <input
           ref={scannerRef}
           type="text"
@@ -178,13 +213,28 @@ const ProductStockIntake: React.FC = () => {
           style={{ opacity: 0, height: 1, width: 1, position: "absolute" }}
         />
 
-        <Button
-          label="Accept All"
-          className="p-button-success mb-3"
-          onClick={acceptAll}
-        />
+        <div className="flex gap-3 mb-3">
+          <Button
+            label="Accept All"
+            className="p-button-success"
+            onClick={acceptAll}
+          />
+          <Button
+            label="Accept Selected"
+            className="p-button-warning"
+            onClick={acceptSelected}
+          />
+        </div>
 
-        <DataTable value={transferItems} showGridlines>
+        <DataTable
+          value={transferItems}
+          showGridlines
+          selection={selectedRows}
+          onSelectionChange={(e) => setSelectedRows(e.value)}
+          dataKey="sku"
+        >
+          <Column selectionMode="multiple" headerStyle={{ width: "3rem" }} />
+          <Column header="S.No" body={(_, { rowIndex }) => rowIndex + 1} />
           <Column field="sku" header="SKU" />
           <Column field="productName" header="Product Name" />
           <Column
@@ -193,7 +243,9 @@ const ProductStockIntake: React.FC = () => {
             body={(row) => (
               <span
                 className={
-                  row.status === "Accepted" ? "text-green-600" : "text-red-600"
+                  row.status === "Accepted"
+                    ? "text-green-600 font-semibold"
+                    : "text-red-600 font-semibold"
                 }
               >
                 {row.status}

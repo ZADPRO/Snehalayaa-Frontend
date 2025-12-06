@@ -17,6 +17,7 @@ export const fetchSupplier = async (): Promise<Supplier[]> => {
   });
 
   if (response.data?.status) {
+    console.log("\n\nSupplier Details =>", response);
     return response.data.data;
   } else {
     throw new Error(response.data.message || "Failed to fetch Supplier");
