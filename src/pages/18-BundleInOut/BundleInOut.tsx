@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import backgroundImage from "../../assets/background/bg.png";
 import { User } from "lucide-react";
@@ -19,14 +19,22 @@ import {
 } from "lucide-react";
 import { Toolbar } from "primereact/toolbar";
 import AddEditBundleInwards from "../../components/18-BundleInOutComponents/AddEditBundleInwards/AddEditBundleInwards";
+import { fetchBundleData } from "./BundleInOut.function";
+import type { BundleInwardItem } from "./BundleInOut.interface";
 
 const BundleInOut: React.FC = () => {
   const dt = useRef<DataTable<any[]>>(null);
   const toast = useRef<Toast>(null);
 
+  const [bundleRegisterData, setBundleRegisterData] = useState<
+    BundleInwardItem[]
+  >([]);
+
   const [visibleInwardSidebar, setVisibleInwardSidebar] =
-    useState<boolean>(true);
-  const [selectedInwardItems, setSelectedInwardItems] = useState<any[]>([]);
+    useState<boolean>(false);
+  const [selectedInwardItems, setSelectedInwardItems] = useState<
+    BundleInwardItem[]
+  >([]);
 
   const editMode =
     Array.isArray(selectedInwardItems) && selectedInwardItems.length === 1;
@@ -63,40 +71,57 @@ const BundleInOut: React.FC = () => {
     </div>
   );
 
+  const [globalFilter, setGlobalFilter] = useState("");
+
   const rightToolbarTemplate = () => (
-    <div className="flex gap-2 items-center">
-      <span className="font-medium pr-5">
-        Total: | Selected: {selectedInwardItems.length}
+    <div className="flex gap-3 items-center">
+      <span className="p-input-icon-left">
+        <i className="pi pi-search" />
+        <input
+          type="text"
+          className="p-inputtext p-component"
+          placeholder="Search..."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          style={{ width: "250px" }}
+        />
       </span>
+
       <Button
-        icon={<FileText size={16} strokeWidth={2} />}
+        icon={<FileText size={16} />}
         severity="secondary"
-        tooltip="Export as CSV"
-        tooltipOptions={{ position: "left" }}
-        // onClick={handleExportCSV}
-        // loading={exportLoading.csv}
-        // disabled={exportLoading.csv}
+        tooltip="CSV"
       />
       <Button
-        icon={<FileSpreadsheet size={16} strokeWidth={2} />}
+        icon={<FileSpreadsheet size={16} />}
         severity="success"
-        tooltip="Export as Excel"
-        tooltipOptions={{ position: "left" }}
-        // onClick={handleExportExcel}
-        // loading={exportLoading.excel}
-        // disabled={exportLoading.excel}
+        tooltip="Excel"
       />
       <Button
-        icon={<FileSignature size={16} strokeWidth={2} />}
+        icon={<FileSignature size={16} />}
         severity="danger"
-        tooltip="Export as PDF"
-        tooltipOptions={{ position: "left" }}
-        // onClick={handleExportPDF}
-        // loading={exportLoading.pdf}
-        // disabled={exportLoading.pdf}
+        tooltip="PDF"
       />
     </div>
   );
+
+  const load = async () => {
+    try {
+      const res = await fetchBundleData();
+
+      setBundleRegisterData(res);
+    } catch (err: any) {
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: err?.message || "Failed to load data",
+      });
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
 
   return (
     <div
@@ -132,11 +157,13 @@ const BundleInOut: React.FC = () => {
         <Tooltip target=".p-button" position="left" />
         <DataTable
           ref={dt}
-          id="categories-table"
-          //   value={categories}
+          value={bundleRegisterData}
           selection={selectedInwardItems}
-          onSelectionChange={(e) => setSelectedInwardItems(e.value as any[])}
+          onSelectionChange={(e) =>
+            setSelectedInwardItems(e.value as BundleInwardItem[])
+          }
           dataKey="refCategoryId"
+          globalFilter={globalFilter}
           selectionMode="multiple"
           paginator
           showGridlines
@@ -151,30 +178,82 @@ const BundleInOut: React.FC = () => {
             headerStyle={{ textAlign: "center", justifyContent: "flex-start" }}
           />
           <Column header="S.No" frozen />
+
           <Column header="Inward Number" style={{ minWidth: "12rem" }} frozen />
-          <Column header="Month" style={{ minWidth: "5rem" }} />
-          <Column header="Date" style={{ minWidth: "5rem" }} frozen />
-          <Column header="PO Date" style={{ minWidth: "5rem" }} />
-          <Column header="PO Number" style={{ minWidth: "12rem" }} frozen />
-          <Column header="PO Value" style={{ minWidth: "5rem" }} />
-          <Column header="PO Receiving Type" style={{ minWidth: "12rem" }} />
-          <Column header="Remarks" style={{ minWidth: "5rem" }} />
+
+          <Column
+            header="Date"
+            field="created_date"
+            style={{ minWidth: "5rem" }}
+            frozen
+          />
+
+          <Column
+            header="PO Date"
+            field="po_date"
+            style={{ minWidth: "5rem" }}
+          />
+          <Column
+            header="PO Number"
+            field="po_number"
+            style={{ minWidth: "12rem" }}
+            frozen
+          />
+          <Column
+            header="PO Value"
+            field="total"
+            style={{ minWidth: "5rem" }}
+          />
+          <Column
+            header="PO Receiving Type"
+            field="receiving_type"
+            style={{ minWidth: "12rem", textTransform: "capitalize" }}
+          />
+          <Column
+            header="Remarks"
+            field="remarks"
+            style={{ minWidth: "5rem" }}
+          />
+
           <Column header="Quantity" style={{ minWidth: "5rem" }} />
-          <Column header="Box Count" style={{ minWidth: "12rem" }} />
-          <Column header="Location" style={{ minWidth: "5rem" }} />
+          <Column
+            header="Box Count"
+            field="box_count"
+            style={{ minWidth: "12rem" }}
+          />
+          <Column
+            header="Location"
+            field="location"
+            style={{ minWidth: "5rem" }}
+          />
           <Column header="Supplier Name" style={{ minWidth: "12rem" }} />
-          <Column header="Bill Date" style={{ minWidth: "5rem" }} />
-          <Column header="Bill No" style={{ minWidth: "5rem" }} />
-          <Column header="Bill Quantity" style={{ minWidth: "12rem" }} />
-          <Column header="Taxable Value" style={{ minWidth: "12rem" }} />
-          <Column header="Tax %" style={{ minWidth: "5rem" }} />
-          <Column header="Taxable Amount" style={{ minWidth: "12rem" }} />
-          <Column header="Invoice Value" style={{ minWidth: "12rem" }} />
-          <Column header="Bundle Status" style={{ minWidth: "12rem" }} />
-          <Column header="GRN Date" style={{ minWidth: "12rem" }} />
-          <Column header="GRN Status" style={{ minWidth: "12rem" }} />
-          <Column header="GRN Value" style={{ minWidth: "12rem" }} />
-          <Column header="Transporter Name" style={{ minWidth: "12rem" }} />
+
+          <Column
+            header="Bundle Status"
+            field="bundle_status"
+            style={{ minWidth: "12rem" }}
+          />
+          <Column
+            header="GRN Date"
+            field="grn_date"
+            style={{ minWidth: "12rem" }}
+          />
+          <Column
+            header="GRN Status"
+            field="grn_status"
+            style={{ minWidth: "12rem" }}
+          />
+          <Column
+            header="GRN Value"
+            field="grn_value"
+            style={{ minWidth: "12rem" }}
+          />
+
+          <Column
+            header="Transporter Name"
+            field="transporter_name"
+            style={{ minWidth: "12rem" }}
+          />
         </DataTable>
 
         <Sidebar

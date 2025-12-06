@@ -17,17 +17,8 @@ import { fetchSupplier } from "../../08-PurchaseOrderComponents/PurchaseOrderCre
 import type { PurchaseOrderListItem } from "../../08-PurchaseOrderComponents/PurchaseOrderList/PurchaseOrderList.interface";
 import type { Supplier } from "../../08-PurchaseOrderComponents/PurchaseOrderCreate/PurchaseOrderCreate.interface";
 import BundlePreviewData from "../BundlePreviewData/BundlePreviewData";
-
-type BillItem = {
-  _id: number;
-  billDate: Date | null;
-  billNo: string;
-  billQty: number;
-  taxableValue: number;
-  taxPercent: number;
-  taxAmount: number;
-  invoiceValue: number;
-};
+import type { BillItem } from "./AddEditBundleInwards.interface";
+import { createBundle } from "./AddEditBundleInwards.function";
 
 const receivingTypeOptions = [
   { name: "Done", code: "done" },
@@ -40,30 +31,50 @@ const bundleStatusOptions = [
   { name: "Un Open", code: "unopen" },
 ];
 
+type FormState = {
+  poId: number | null;
+  poDate: Date | null;
+  supplierId: number | null;
+  location: string;
+  poValue: number;
+  receivingType: string;
+  remarks: string;
+  poQty: number;
+  boxCount: number;
+
+  billList: BillItem[];
+  billForm: BillItem & { _id: number | null };
+
+  grnDate: Date | null;
+  grnStatus: string;
+  grnValue: number;
+  bundleStatus: string;
+  transporterName: string;
+  createdDate: Date | null;
+};
+
 const AddEditBundleInwards: React.FC = () => {
   const toast = useRef<Toast | null>(null);
 
   // master data
   const [poDetails, setPODetails] = useState<PurchaseOrderListItem[]>([]);
   const [supplierDetails, setSupplierDetails] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(false);
-  console.log("loading", loading);
 
   // form state
-  const [formData, setFormData] = useState({
-    poId: null as number | null,
-    poDate: null as Date | null,
-    supplierId: null as number | null,
+  const [formData, setFormData] = useState<FormState>({
+    poId: null,
+    poDate: null,
+    supplierId: null,
     location: "",
     poValue: 0,
     receivingType: "",
     remarks: "",
     poQty: 0,
     boxCount: 0,
-    // bill
-    billList: [] as BillItem[],
+
+    billList: [],
     billForm: {
-      _id: Date.now(),
+      _id: null,
       billDate: null,
       billNo: "",
       billQty: 0,
@@ -71,14 +82,14 @@ const AddEditBundleInwards: React.FC = () => {
       taxPercent: 0,
       taxAmount: 0,
       invoiceValue: 0,
-    } as BillItem,
-    // grn
-    grnDate: null as Date | null,
+    },
+
+    grnDate: null,
     grnStatus: "",
     grnValue: 0,
     bundleStatus: "",
     transporterName: "",
-    createdDate: null as Date | null,
+    createdDate: null,
   });
 
   // preview dialog
@@ -86,20 +97,17 @@ const AddEditBundleInwards: React.FC = () => {
 
   // load master data
   const load = async () => {
-    setLoading(true);
     try {
       const po = await fetchPurchaseOrderList();
       const suppliers = await fetchSupplier();
-      setPODetails(po);
-      setSupplierDetails(suppliers);
+      setPODetails(po || []);
+      setSupplierDetails(suppliers || []);
     } catch (err: any) {
       toast.current?.show({
         severity: "error",
         summary: "Error",
         detail: err?.message || "Failed to load data",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -108,8 +116,8 @@ const AddEditBundleInwards: React.FC = () => {
   }, []);
 
   // ------ Helpers -------
-  const resetBillForm = () => ({
-    _id: Date.now(),
+  const resetBillForm = (): FormState["billForm"] => ({
+    _id: null,
     billDate: null,
     billNo: "",
     billQty: 0,
@@ -119,17 +127,17 @@ const AddEditBundleInwards: React.FC = () => {
     invoiceValue: 0,
   });
 
-  // When user selects a PO, autofill fields
+  // Update generic field safely
+  const updateField = (key: keyof FormState, value: any) =>
+    setFormData((prev) => ({ ...prev, [key]: value }));
+
+  // When user selects a PO, autofill fields (without overwriting unrelated user choices)
   const handlePOChange = (e: DropdownChangeEvent) => {
     const poId = e.value as number;
     const selected = poDetails.find((p) => p.id === poId);
     if (!selected) return;
 
-    const supplier = supplierDetails.find(
-      (s) => s.supplierId === selected.supplierId
-    );
-    console.log("supplier", supplier);
-
+    // convert createdAt (string) to Date if available
     const createdAtDate = selected.createdAt
       ? new Date(selected.createdAt)
       : null;
@@ -139,40 +147,40 @@ const AddEditBundleInwards: React.FC = () => {
       poId: selected.id,
       poDate: createdAtDate,
       supplierId: selected.supplierId,
-      location: selected?.refBranchCode ?? "",
+      location: selected?.refBranchCode ?? prev.location,
       poValue: Number(selected.total) || 0,
       poQty: selected.totalorderedqty || 0,
-      receivingType: prev.receivingType || "done",
+      // keep user's existing receivingType if any, otherwise blank
+      receivingType: prev.receivingType ?? "",
     }));
   };
 
-  // Update generic field
-  const updateField = (key: string, value: any) =>
-    setFormData((prev) => ({ ...prev, [key]: value }));
-
   // Update nested bill form and auto-calc tax/invoice
   const updateBillField = (key: keyof BillItem, value: any) => {
-    const updated: BillItem = {
-      ...formData.billForm,
-      [key]: value,
-    } as BillItem;
+    setFormData((prev) => {
+      const updated = {
+        ...prev.billForm,
+        [key]: value,
+      } as BillItem & { _id: number | null };
 
-    const taxable = Number(updated.taxableValue || 0);
-    const tax = Number(updated.taxPercent || 0);
-    const taxAmount = +(taxable * (tax / 100));
-    const invoiceValue = +(taxable + taxAmount);
+      const taxable = Number(updated.taxableValue || 0);
+      const tax = Number(updated.taxPercent || 0);
+      const taxAmount = +(taxable * (tax / 100));
+      const invoiceValue = +(taxable + taxAmount);
 
-    updated.taxAmount = +taxAmount;
-    updated.invoiceValue = +invoiceValue;
+      updated.taxAmount = +taxAmount;
+      updated.invoiceValue = +invoiceValue;
 
-    setFormData((prev) => ({ ...prev, billForm: updated }));
+      return { ...prev, billForm: updated };
+    });
   };
 
   // Save (add) bill entry
   const saveBillEntry = () => {
     const bill = { ...formData.billForm };
-    // basic validation for bill
-    if (!bill.billNo) {
+
+    // basic validation
+    if (!bill.billNo || bill.billNo.trim() === "") {
       toast.current?.show({
         severity: "warn",
         summary: "Validation",
@@ -181,17 +189,25 @@ const AddEditBundleInwards: React.FC = () => {
       return;
     }
 
-    // If editing existing row (match _id)
-    const exists = formData.billList.find((b) => b._id === bill._id);
-    if (exists) {
-      const newList = formData.billList.map((b) =>
-        b._id === bill._id ? bill : b
-      );
-      setFormData((prev) => ({
-        ...prev,
-        billList: newList,
-        billForm: resetBillForm(),
-      }));
+    // EDIT mode: if _id is not null and exists in list -> update
+    if (bill._id !== null) {
+      setFormData((prev) => {
+        const exists = prev.billList.some((b) => b._id === bill._id);
+        if (exists) {
+          const newList = prev.billList.map((b) =>
+            b._id === bill._id ? bill : b
+          );
+          return { ...prev, billList: newList, billForm: resetBillForm() };
+        }
+        // if somehow _id present but not found, treat as new below
+        const newEntry = { ...bill, _id: Date.now() };
+        return {
+          ...prev,
+          billList: [...prev.billList, newEntry],
+          billForm: resetBillForm(),
+        };
+      });
+
       toast.current?.show({
         severity: "success",
         summary: "Updated",
@@ -200,13 +216,14 @@ const AddEditBundleInwards: React.FC = () => {
       return;
     }
 
-    // New entry
-    bill._id = Date.now();
+    // ADD mode
+    const newBill = { ...bill, _id: Date.now() };
     setFormData((prev) => ({
       ...prev,
-      billList: [...prev.billList, bill],
+      billList: [...prev.billList, newBill],
       billForm: resetBillForm(),
     }));
+
     toast.current?.show({
       severity: "success",
       summary: "Saved",
@@ -214,14 +231,18 @@ const AddEditBundleInwards: React.FC = () => {
     });
   };
 
+  // Edit bill: copy row into billForm (keep original _id)
   const editBill = (row: BillItem) => {
-    setFormData((prev) => ({ ...prev, billForm: { ...row } }));
-    window.scrollTo({ top: 0, behavior: "smooth" }); // bring inputs into view
+    setFormData((prev) => ({ ...prev, billForm: { ...row } as any }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Delete bill by _id
   const deleteBill = (row: BillItem) => {
-    const filtered = formData.billList.filter((b) => b._id !== row._id);
-    setFormData((prev) => ({ ...prev, billList: filtered }));
+    setFormData((prev) => ({
+      ...prev,
+      billList: prev.billList.filter((b) => b._id !== row._id),
+    }));
     toast.current?.show({
       severity: "info",
       summary: "Deleted",
@@ -229,7 +250,9 @@ const AddEditBundleInwards: React.FC = () => {
     });
   };
 
+  // Build payload and "save" (send to backend)
   const handleSaveAll = async () => {
+    // mandatory: PO basic details
     if (!formData.poId) {
       toast.current?.show({
         severity: "error",
@@ -241,36 +264,43 @@ const AddEditBundleInwards: React.FC = () => {
 
     const payload = {
       poId: formData.poId,
+
       poDetails: {
-        poDate: formData.poDate,
-        supplierId: formData.supplierId,
-        location: formData.location,
-        poValue: +formData.poValue,
-        receivingType: formData.receivingType,
-        remarks: formData.remarks,
-        poQty: +formData.poQty,
-        boxCount: +formData.boxCount,
+        poDate: formData.poDate ? String(formData.poDate) : "",
+        supplierId: formData.supplierId, // number ✔
+        location: String(formData.location ?? ""),
+        poValue: String(formData.poValue ?? "0"),
+        receivingType: String(formData.receivingType ?? ""),
+        remarks: String(formData.remarks ?? ""),
+        poQty: String(formData.poQty ?? "0"),
+        boxCount: String(formData.boxCount ?? "0"),
       },
+
       bills: formData.billList.map((b) => ({
-        billDate: b.billDate,
-        billNo: b.billNo,
-        billQty: +b.billQty,
-        taxableValue: +b.taxableValue,
-        taxPercent: +b.taxPercent,
-        taxAmount: +b.taxAmount,
-        invoiceValue: +b.invoiceValue,
+        billDate: b.billDate ? String(b.billDate) : "",
+        billNo: String(b.billNo ?? ""),
+        billQty: String(b.billQty ?? "0"),
+        taxableValue: String(b.taxableValue ?? "0"),
+        taxPercent: String(b.taxPercent ?? "0"),
+        taxAmount: String(b.taxAmount ?? "0"),
+        invoiceValue: String(b.invoiceValue ?? "0"),
       })),
+
       grnDetails: {
-        grnDate: formData.grnDate,
-        grnStatus: formData.grnStatus,
-        grnValue: +formData.grnValue,
-        bundleStatus: formData.bundleStatus,
-        transporterName: formData.transporterName,
-        createdDate: formData.createdDate,
+        grnDate: formData.grnDate ? String(formData.grnDate) : "",
+        grnStatus: String(formData.grnStatus ?? ""),
+        grnValue: String(formData.grnValue ?? "0"),
+        bundleStatus: String(formData.bundleStatus ?? ""),
+        transporterName: String(formData.transporterName ?? ""),
+        createdDate: formData.createdDate ? String(formData.createdDate) : "",
       },
     };
 
+    // TODO: replace console.log with your actual API call
     console.log("Payload to send:", payload);
+
+    const result = await createBundle(payload);
+    console.log("result", result);
 
     toast.current?.show({
       severity: "success",
@@ -279,6 +309,7 @@ const AddEditBundleInwards: React.FC = () => {
     });
   };
 
+  // render helpers
   const billDateBody = (row: BillItem) =>
     row.billDate ? new Date(row.billDate).toLocaleDateString() : "-";
 
@@ -358,6 +389,7 @@ const AddEditBundleInwards: React.FC = () => {
             <FloatLabel className="always-float">
               <InputNumber
                 mode="decimal"
+                minFractionDigits={2}
                 value={formData.poValue}
                 onValueChange={(e) => updateField("poValue", e.value)}
                 className="w-full"
@@ -370,12 +402,11 @@ const AddEditBundleInwards: React.FC = () => {
             <FloatLabel className="always-float">
               <Dropdown
                 optionLabel="name"
+                optionValue="code"
                 options={receivingTypeOptions}
                 className="w-full"
                 value={formData.receivingType}
-                onChange={(e) =>
-                  updateField("receivingType", e.value?.code ?? e.value)
-                }
+                onChange={(e) => updateField("receivingType", e.value)}
               />
               <label>Receiving Type</label>
             </FloatLabel>
@@ -397,6 +428,8 @@ const AddEditBundleInwards: React.FC = () => {
           <div className="flex-1">
             <FloatLabel className="always-float">
               <InputNumber
+                mode="decimal"
+                minFractionDigits={2}
                 value={formData.poQty}
                 onValueChange={(e) => updateField("poQty", e.value)}
                 className="w-full"
@@ -452,6 +485,7 @@ const AddEditBundleInwards: React.FC = () => {
             <FloatLabel className="always-float">
               <InputNumber
                 mode="decimal"
+                minFractionDigits={2}
                 value={formData.billForm.billQty}
                 onValueChange={(e) => updateBillField("billQty", e.value)}
                 className="w-full"
@@ -464,6 +498,7 @@ const AddEditBundleInwards: React.FC = () => {
             <FloatLabel className="always-float">
               <InputNumber
                 mode="decimal"
+                minFractionDigits={2}
                 value={formData.billForm.taxableValue}
                 onValueChange={(e) => updateBillField("taxableValue", e.value)}
                 className="w-full"
@@ -478,6 +513,7 @@ const AddEditBundleInwards: React.FC = () => {
             <FloatLabel className="always-float">
               <InputNumber
                 mode="decimal"
+                minFractionDigits={2}
                 value={formData.billForm.taxPercent}
                 onValueChange={(e) => updateBillField("taxPercent", e.value)}
                 className="w-full"
@@ -490,6 +526,7 @@ const AddEditBundleInwards: React.FC = () => {
             <FloatLabel className="always-float">
               <InputNumber
                 mode="decimal"
+                minFractionDigits={2}
                 value={formData.billForm.taxAmount}
                 className="w-full"
                 readOnly
@@ -502,6 +539,7 @@ const AddEditBundleInwards: React.FC = () => {
             <FloatLabel className="always-float">
               <InputNumber
                 mode="decimal"
+                minFractionDigits={2}
                 value={formData.billForm.invoiceValue}
                 className="w-full"
                 readOnly
@@ -513,11 +551,7 @@ const AddEditBundleInwards: React.FC = () => {
           <div className="flex-1 flex items-end">
             <Button
               className="w-full"
-              label={
-                formData.billList.some((b) => b._id === formData.billForm._id)
-                  ? "Update"
-                  : "Add"
-              }
+              label={formData.billForm._id !== null ? "Update" : "Add"}
               icon={<Check />}
               onClick={saveBillEntry}
             />
@@ -580,6 +614,7 @@ const AddEditBundleInwards: React.FC = () => {
             <FloatLabel className="always-float">
               <InputNumber
                 mode="decimal"
+                minFractionDigits={2}
                 value={formData.grnValue}
                 onValueChange={(e) => updateField("grnValue", e.value)}
                 className="w-full"
@@ -594,12 +629,11 @@ const AddEditBundleInwards: React.FC = () => {
             <FloatLabel className="always-float">
               <Dropdown
                 optionLabel="name"
+                optionValue="code"
                 options={bundleStatusOptions}
                 className="w-full"
                 value={formData.bundleStatus}
-                onChange={(e) =>
-                  updateField("bundleStatus", e.value?.code ?? e.value)
-                }
+                onChange={(e) => updateField("bundleStatus", e.value)}
               />
               <label>Bundle Status</label>
             </FloatLabel>
@@ -652,7 +686,11 @@ const AddEditBundleInwards: React.FC = () => {
         style={{ width: "70vw" }}
         onHide={() => setPreviewVisible(false)}
       >
-        <BundlePreviewData />
+        <BundlePreviewData
+          data={formData}
+          poList={poDetails}
+          supplierList={supplierDetails}
+        />
       </Dialog>
     </div>
   );
