@@ -24,7 +24,6 @@ const BundleInOut: React.FC = () => {
   const dt = useRef<DataTable<any[]>>(null);
   const toast = useRef<Toast>(null);
 
-  const [loading, setLoading] = useState<boolean>(false);
   const [visibleInwardSidebar, setVisibleInwardSidebar] =
     useState<boolean>(true);
   const [selectedInwardItems, setSelectedInwardItems] = useState<any[]>([]);
@@ -141,7 +140,6 @@ const BundleInOut: React.FC = () => {
           selectionMode="multiple"
           paginator
           showGridlines
-          loading={loading}
           stripedRows
           rows={15}
           rowsPerPageOptions={[15, 30, 50]}

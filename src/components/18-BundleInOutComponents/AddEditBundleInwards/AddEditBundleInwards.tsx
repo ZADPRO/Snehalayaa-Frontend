@@ -46,7 +46,8 @@ const AddEditBundleInwards: React.FC = () => {
   // master data
   const [poDetails, setPODetails] = useState<PurchaseOrderListItem[]>([]);
   const [supplierDetails, setSupplierDetails] = useState<Supplier[]>([]);
-  const [_loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  console.log("loading", loading);
 
   // form state
   const [formData, setFormData] = useState({
@@ -124,9 +125,10 @@ const AddEditBundleInwards: React.FC = () => {
     const selected = poDetails.find((p) => p.id === poId);
     if (!selected) return;
 
-    const _supplier = supplierDetails.find(
+    const supplier = supplierDetails.find(
       (s) => s.supplierId === selected.supplierId
     );
+    console.log("supplier", supplier);
 
     const createdAtDate = selected.createdAt
       ? new Date(selected.createdAt)

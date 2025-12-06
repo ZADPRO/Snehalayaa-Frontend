@@ -101,6 +101,7 @@ const ProductStockIntake: React.FC = () => {
 
     try {
       const res = await acceptStockIntake(payload);
+      console.log("res", res);
 
       toast.current?.show({
         severity: "success",
@@ -138,6 +139,7 @@ const ProductStockIntake: React.FC = () => {
 
     try {
       const res = await acceptStockIntake(payload);
+      console.log("res", res);
 
       toast.current?.show({
         severity: "success",
