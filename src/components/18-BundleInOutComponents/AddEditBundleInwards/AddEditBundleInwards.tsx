@@ -17,7 +17,11 @@ import { fetchSupplier } from "../../08-PurchaseOrderComponents/PurchaseOrderCre
 import type { PurchaseOrderListItem } from "../../08-PurchaseOrderComponents/PurchaseOrderList/PurchaseOrderList.interface";
 import type { Supplier } from "../../08-PurchaseOrderComponents/PurchaseOrderCreate/PurchaseOrderCreate.interface";
 import BundlePreviewData from "../BundlePreviewData/BundlePreviewData";
-import type { BillItem } from "./AddEditBundleInwards.interface";
+import type {
+  AddEditProps,
+  BillItem,
+  FormState,
+} from "./AddEditBundleInwards.interface";
 import { createBundle } from "./AddEditBundleInwards.function";
 
 const receivingTypeOptions = [
@@ -31,36 +35,16 @@ const bundleStatusOptions = [
   { name: "Un Open", code: "unopen" },
 ];
 
-type FormState = {
-  poId: number | null;
-  poDate: Date | null;
-  supplierId: number | null;
-  location: string;
-  poValue: number;
-  receivingType: string;
-  remarks: string;
-  poQty: number;
-  boxCount: number;
-
-  billList: BillItem[];
-  billForm: BillItem & { _id: number | null };
-
-  grnDate: Date | null;
-  grnStatus: string;
-  grnValue: number;
-  bundleStatus: string;
-  transporterName: string;
-  createdDate: Date | null;
-};
-
-const AddEditBundleInwards: React.FC = () => {
+const AddEditBundleInwards: React.FC<AddEditProps> = ({
+  editData,
+  onSuccess,
+}) => {
+  console.log("editData", editData);
   const toast = useRef<Toast | null>(null);
 
-  // master data
   const [poDetails, setPODetails] = useState<PurchaseOrderListItem[]>([]);
   const [supplierDetails, setSupplierDetails] = useState<Supplier[]>([]);
 
-  // form state
   const [formData, setFormData] = useState<FormState>({
     poId: null,
     poDate: null,
@@ -92,10 +76,8 @@ const AddEditBundleInwards: React.FC = () => {
     createdDate: null,
   });
 
-  // preview dialog
   const [previewVisible, setPreviewVisible] = useState(false);
 
-  // load master data
   const load = async () => {
     try {
       const po = await fetchPurchaseOrderList();
@@ -115,7 +97,6 @@ const AddEditBundleInwards: React.FC = () => {
     load();
   }, []);
 
-  // ------ Helpers -------
   const resetBillForm = (): FormState["billForm"] => ({
     _id: null,
     billDate: null,
@@ -127,17 +108,14 @@ const AddEditBundleInwards: React.FC = () => {
     invoiceValue: 0,
   });
 
-  // Update generic field safely
   const updateField = (key: keyof FormState, value: any) =>
     setFormData((prev) => ({ ...prev, [key]: value }));
 
-  // When user selects a PO, autofill fields (without overwriting unrelated user choices)
   const handlePOChange = (e: DropdownChangeEvent) => {
     const poId = e.value as number;
     const selected = poDetails.find((p) => p.id === poId);
     if (!selected) return;
 
-    // convert createdAt (string) to Date if available
     const createdAtDate = selected.createdAt
       ? new Date(selected.createdAt)
       : null;
@@ -147,15 +125,12 @@ const AddEditBundleInwards: React.FC = () => {
       poId: selected.id,
       poDate: createdAtDate,
       supplierId: selected.supplierId,
-      location: selected?.refBranchCode ?? prev.location,
       poValue: Number(selected.total) || 0,
       poQty: selected.totalorderedqty || 0,
-      // keep user's existing receivingType if any, otherwise blank
       receivingType: prev.receivingType ?? "",
     }));
   };
 
-  // Update nested bill form and auto-calc tax/invoice
   const updateBillField = (key: keyof BillItem, value: any) => {
     setFormData((prev) => {
       const updated = {
@@ -175,11 +150,9 @@ const AddEditBundleInwards: React.FC = () => {
     });
   };
 
-  // Save (add) bill entry
   const saveBillEntry = () => {
     const bill = { ...formData.billForm };
 
-    // basic validation
     if (!bill.billNo || bill.billNo.trim() === "") {
       toast.current?.show({
         severity: "warn",
@@ -189,7 +162,6 @@ const AddEditBundleInwards: React.FC = () => {
       return;
     }
 
-    // EDIT mode: if _id is not null and exists in list -> update
     if (bill._id !== null) {
       setFormData((prev) => {
         const exists = prev.billList.some((b) => b._id === bill._id);
@@ -199,7 +171,6 @@ const AddEditBundleInwards: React.FC = () => {
           );
           return { ...prev, billList: newList, billForm: resetBillForm() };
         }
-        // if somehow _id present but not found, treat as new below
         const newEntry = { ...bill, _id: Date.now() };
         return {
           ...prev,
@@ -216,7 +187,6 @@ const AddEditBundleInwards: React.FC = () => {
       return;
     }
 
-    // ADD mode
     const newBill = { ...bill, _id: Date.now() };
     setFormData((prev) => ({
       ...prev,
@@ -231,13 +201,11 @@ const AddEditBundleInwards: React.FC = () => {
     });
   };
 
-  // Edit bill: copy row into billForm (keep original _id)
   const editBill = (row: BillItem) => {
     setFormData((prev) => ({ ...prev, billForm: { ...row } as any }));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Delete bill by _id
   const deleteBill = (row: BillItem) => {
     setFormData((prev) => ({
       ...prev,
@@ -250,9 +218,7 @@ const AddEditBundleInwards: React.FC = () => {
     });
   };
 
-  // Build payload and "save" (send to backend)
   const handleSaveAll = async () => {
-    // mandatory: PO basic details
     if (!formData.poId) {
       toast.current?.show({
         severity: "error",
@@ -296,7 +262,6 @@ const AddEditBundleInwards: React.FC = () => {
       },
     };
 
-    // TODO: replace console.log with your actual API call
     console.log("Payload to send:", payload);
 
     const result = await createBundle(payload);
@@ -307,9 +272,9 @@ const AddEditBundleInwards: React.FC = () => {
       summary: "Saved",
       detail: "Payload prepared and logged to console (replace with API)",
     });
+    onSuccess();
   };
 
-  // render helpers
   const billDateBody = (row: BillItem) =>
     row.billDate ? new Date(row.billDate).toLocaleDateString() : "-";
 
@@ -323,6 +288,48 @@ const AddEditBundleInwards: React.FC = () => {
       />
     </div>
   );
+
+  useEffect(() => {
+    if (editData) {
+      const formattedBills: BillItem[] = (editData.bills || []).map(
+        (b: any) => ({
+          _id: b.id ?? Date.now(),
+          billDate: b.bill_date ? new Date(b.bill_date) : null,
+          billNo: b.bill_no ?? "",
+          billQty: Number(b.bill_qty ?? 0),
+          taxableValue: Number(b.taxable_value ?? 0),
+          taxPercent: Number(b.tax_percent ?? 0),
+          taxAmount: Number(b.tax_amount ?? 0),
+          invoiceValue: Number(b.invoice_value ?? 0),
+        })
+      );
+
+      setFormData({
+        poId: editData.po_id || null,
+        poDate: editData.po_date ? new Date(editData.po_date) : null,
+        supplierId: editData.supplier_id,
+        location: editData.location,
+        poValue: Number(editData.total),
+        receivingType: editData.receiving_type,
+        remarks: editData.remarks,
+        poQty: Number(editData.po_qty),
+        boxCount: Number(editData.box_count),
+
+        billList: formattedBills, // ← FIXED
+
+        billForm: resetBillForm(),
+
+        grnDate: editData.grn_date ? new Date(editData.grn_date) : null,
+        grnStatus: editData.grn_status,
+        grnValue: Number(editData.grn_value ?? 0), // ← FIXED
+        bundleStatus: editData.bundle_status,
+        transporterName: editData.transporter_name,
+        createdDate: editData.created_date
+          ? new Date(editData.created_date)
+          : null,
+      });
+    }
+  }, [editData]);
 
   return (
     <div className="">

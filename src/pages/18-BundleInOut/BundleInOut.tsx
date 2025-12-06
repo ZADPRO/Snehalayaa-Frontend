@@ -8,6 +8,9 @@ import { Button } from "primereact/button";
 import { Toast } from "primereact/toast";
 import { Tooltip } from "primereact/tooltip";
 import { Sidebar } from "primereact/sidebar";
+import { InputText } from "primereact/inputtext";
+import { IconField } from "primereact/iconfield";
+import { InputIcon } from "primereact/inputicon";
 
 import {
   Plus,
@@ -75,17 +78,15 @@ const BundleInOut: React.FC = () => {
 
   const rightToolbarTemplate = () => (
     <div className="flex gap-3 items-center">
-      <span className="p-input-icon-left">
-        <i className="pi pi-search" />
-        <input
-          type="text"
-          className="p-inputtext p-component"
+      <IconField iconPosition="left">
+        <InputIcon className="pi pi-search" />
+        <InputText
           placeholder="Search..."
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           style={{ width: "250px" }}
         />
-      </span>
+      </IconField>
 
       <Button
         icon={<FileText size={16} />}
@@ -122,6 +123,19 @@ const BundleInOut: React.FC = () => {
   useEffect(() => {
     load();
   }, []);
+
+  const formatDate = (value: any) => {
+    if (!value) return "-";
+
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return value; // fallback if invalid format
+
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
 
   return (
     <div
@@ -162,12 +176,13 @@ const BundleInOut: React.FC = () => {
           onSelectionChange={(e) =>
             setSelectedInwardItems(e.value as BundleInwardItem[])
           }
-          dataKey="refCategoryId"
+          dataKey="inward_id"
           globalFilter={globalFilter}
           selectionMode="multiple"
           paginator
           showGridlines
           stripedRows
+          scrollable
           rows={15}
           rowsPerPageOptions={[15, 30, 50]}
           responsiveLayout="scroll"
@@ -184,14 +199,16 @@ const BundleInOut: React.FC = () => {
           <Column
             header="Date"
             field="created_date"
-            style={{ minWidth: "5rem" }}
+            body={(row) => formatDate(row.created_date)}
+            style={{ minWidth: "12rem" }}
             frozen
           />
 
           <Column
             header="PO Date"
             field="po_date"
-            style={{ minWidth: "5rem" }}
+            body={(row) => formatDate(row.po_date)}
+            style={{ minWidth: "12rem" }}
           />
           <Column
             header="PO Number"
@@ -212,7 +229,7 @@ const BundleInOut: React.FC = () => {
           <Column
             header="Remarks"
             field="remarks"
-            style={{ minWidth: "5rem" }}
+            style={{ minWidth: "12rem" }}
           />
 
           <Column header="Quantity" style={{ minWidth: "5rem" }} />
@@ -236,6 +253,7 @@ const BundleInOut: React.FC = () => {
           <Column
             header="GRN Date"
             field="grn_date"
+            body={(row) => formatDate(row.grn_date)}
             style={{ minWidth: "12rem" }}
           />
           <Column
@@ -266,7 +284,14 @@ const BundleInOut: React.FC = () => {
           }}
           style={{ width: "70vw" }}
         >
-          <AddEditBundleInwards />
+          <AddEditBundleInwards
+            editData={selectedInward}
+            onSuccess={() => {
+              setVisibleInwardSidebar(false);
+              setSelectedInwardItems([]);
+              load();
+            }}
+          />
         </Sidebar>
       </div>
     </div>
