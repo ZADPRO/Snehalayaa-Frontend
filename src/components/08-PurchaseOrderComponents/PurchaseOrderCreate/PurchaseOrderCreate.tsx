@@ -8,6 +8,10 @@ import { Toast } from "primereact/toast";
 import { InputSwitch } from "primereact/inputswitch";
 import React, { useEffect, useRef, useState } from "react";
 
+import { pdf } from "@react-pdf/renderer";
+
+import logo from "../../../assets/logo/transparentLogo01.png";
+
 import {
   fetchBranch,
   fetchCategories,
@@ -26,6 +30,7 @@ import type {
   Supplier,
   LineItem,
 } from "./PurchaseOrderCreate.interface";
+import PurchaseOrderPdfReport from "./PurchaseOrderPdfReport";
 
 const taxOptions = [0, 2, 2.5, 5, 8, 12, 18].map((v) => ({
   label: `${v}%`,
@@ -100,6 +105,19 @@ const PurchaseOrderCreate: React.FC = () => {
   useEffect(() => {
     load();
   }, []);
+
+  const getBase64FromImage = (imgUrl: string): Promise<string> => {
+    return fetch(imgUrl)
+      .then((res) => res.blob())
+      .then((blob) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      });
+  };
 
   // Filter subcategories based on selected category
   useEffect(() => {
@@ -307,6 +325,97 @@ const PurchaseOrderCreate: React.FC = () => {
   const getSubCategoryName = (id: number) =>
     subCategoryDetails.find((s) => s.refSubCategoryId === id)
       ?.subCategoryName || "-";
+
+  const handleDownloadPDF = async () => {
+    const logoBase64 = await getBase64FromImage(logo);
+
+    const pdfProps = {
+      from: selectedSupplier,
+      to: selectedBranch,
+      invoiceNumber: poNumber,
+      items: lineItems || [],
+      summary: {
+        taxPercentage: taxRate || "0",
+        taxAmount: taxAmount.toFixed(2).toString,
+        subTotal: totalRounded.toFixed(2),
+        totalAmount: totalRounded.toFixed(2),
+      },
+      logoBase64,
+    };
+    console.log("pdfProps", pdfProps);
+
+    try {
+      const blob = await pdf(<PurchaseOrderPdfReport {...pdfProps} />).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      window.open(url);
+
+      toast.current?.show({
+        severity: "success",
+        summary: "PDF Generated",
+        detail: "Purchase order PDF downloaded successfully",
+      });
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: "Failed to generate PDF",
+      });
+    }
+  };
+
+  const handlePrintPdf = async () => {
+    const logoBase64 = await getBase64FromImage(logo);
+
+    const pdfProps = {
+      from: selectedSupplier,
+      to: selectedBranch,
+      invoiceNumber: poNumber,
+      items: lineItems || [],
+      summary: {
+        taxPercentage: taxRate || "0",
+        taxAmount: taxAmount.toFixed(2),
+        subTotal: totalRounded.toFixed(2),
+        totalAmount: totalRounded.toFixed(2),
+      },
+      logoBase64,
+    };
+    console.log("pdfProps", pdfProps);
+
+    try {
+      const blob = await pdf(<PurchaseOrderPdfReport {...pdfProps} />).toBlob();
+      const url = URL.createObjectURL(blob);
+
+      const printWindow = window.open(url);
+
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.focus();
+          printWindow.print();
+        };
+
+        toast.current?.show({
+          severity: "success",
+          summary: "PDF Ready",
+          detail: "Purchase order PDF opened for printing",
+        });
+      } else {
+        toast.current?.show({
+          severity: "error",
+          summary: "Popup Blocked",
+          detail: "Please allow popups for this site to print the PDF",
+        });
+      }
+    } catch (error) {
+      console.error("PDF print failed:", error);
+      toast.current?.show({
+        severity: "error",
+        summary: "Error",
+        detail: "Failed to generate PDF for print",
+      });
+    }
+  };
 
   return (
     <div className="flex gap-2 w-full">
@@ -563,8 +672,18 @@ const PurchaseOrderCreate: React.FC = () => {
               onClick={handleSave}
               disabled={poLocked || loading}
             />
-            <Button label="Download" className="flex-1" disabled={!poLocked} />
-            <Button label="Print" className="flex-1" disabled={!poLocked} />
+            <Button
+              label="Download"
+              className="flex-1"
+              disabled={!poLocked}
+              onClick={() => handleDownloadPDF()}
+            />
+            <Button
+              label="Print"
+              className="flex-1"
+              disabled={!poLocked}
+              onClick={handlePrintPdf}
+            />
           </div>
 
           {/* Tax toggle + dropdown */}
