@@ -15,7 +15,6 @@ import { InputIcon } from "primereact/inputicon";
 import {
   Plus,
   Pencil,
-  Trash2,
   FileText,
   FileSpreadsheet,
   FileSignature,
@@ -62,14 +61,6 @@ const BundleInOut: React.FC = () => {
         tooltipOptions={{ position: "left" }}
         disabled={!isSingleSelected}
         onClick={() => setVisibleInwardSidebar(true)}
-      />
-      <Button
-        icon={<Trash2 size={16} strokeWidth={2} />}
-        severity="danger"
-        tooltip="Delete Categories"
-        tooltipOptions={{ position: "left" }}
-        disabled={!isAnySelected}
-        // onClick={handleDelete}
       />
     </div>
   );
@@ -192,9 +183,14 @@ const BundleInOut: React.FC = () => {
             headerClassName="align-start-header"
             headerStyle={{ textAlign: "center", justifyContent: "flex-start" }}
           />
-          <Column header="S.No" frozen />
+          <Column header="SNo" frozen body={(_, opts) => opts.rowIndex + 1} />
 
-          <Column header="Inward Number" style={{ minWidth: "12rem" }} frozen />
+          <Column
+            header="Inward Number"
+            field="po_number"
+            style={{ minWidth: "12rem" }}
+            frozen
+          />
 
           <Column
             header="Date"

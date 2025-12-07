@@ -431,6 +431,7 @@ const PurchaseOrderCreate: React.FC = () => {
                 options={supplierDetails}
                 optionLabel="supplierName"
                 optionValue="supplierId"
+                filter
                 value={selectedSupplierId}
                 disabled={poLocked}
                 onChange={(e) => setSelectedSupplierId(e.value)}
@@ -445,6 +446,7 @@ const PurchaseOrderCreate: React.FC = () => {
                 optionLabel="refBranchName"
                 value={selectedBranchId}
                 disabled={poLocked}
+                filter
                 onChange={(e) => setSelectedBranchId(e.value)}
               />
             </div>

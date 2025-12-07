@@ -46,6 +46,9 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
   const [poDetails, setPODetails] = useState<PurchaseOrderListItem[]>([]);
   const [supplierDetails, setSupplierDetails] = useState<Supplier[]>([]);
 
+  const [qtyDialogVisible, setQtyDialogVisible] = useState(false);
+  const [pendingBillData, setPendingBillData] = useState<BillItem | null>(null);
+
   const [formData, setFormData] = useState<FormState>({
     poId: null,
     poDate: null,
@@ -127,6 +130,7 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
       poDate: createdAtDate,
       supplierId: selected.supplierId,
       poValue: Number(selected.total) || 0,
+      location: selected.supplierCity,
       poQty: selected.totalorderedqty || 0,
       receivingType: prev.receivingType ?? "",
     }));
@@ -151,10 +155,42 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
     });
   };
 
+  const applyBillSave = (bill: BillItem) => {
+    if (bill._id !== null) {
+      // EDIT MODE
+      setFormData((prev) => {
+        const updatedList = prev.billList.map((b) =>
+          b._id === bill._id ? bill : b
+        );
+        return { ...prev, billList: updatedList, billForm: resetBillForm() };
+      });
+
+      toast.current?.show({
+        severity: "success",
+        summary: "Updated",
+        detail: "Bill updated",
+      });
+    } else {
+      // ADD MODE
+      const newBill = { ...bill, _id: Date.now() };
+      setFormData((prev) => ({
+        ...prev,
+        billList: [...prev.billList, newBill],
+        billForm: resetBillForm(),
+      }));
+
+      toast.current?.show({
+        severity: "success",
+        summary: "Saved",
+        detail: "Bill added",
+      });
+    }
+  };
+
   const saveBillEntry = () => {
     const bill = { ...formData.billForm };
 
-    if (!bill.billNo || bill.billNo.trim() === "") {
+    if (!bill.billNo?.trim()) {
       toast.current?.show({
         severity: "warn",
         summary: "Validation",
@@ -163,43 +199,24 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
       return;
     }
 
-    if (bill._id !== null) {
-      setFormData((prev) => {
-        const exists = prev.billList.some((b) => b._id === bill._id);
-        if (exists) {
-          const newList = prev.billList.map((b) =>
-            b._id === bill._id ? bill : b
-          );
-          return { ...prev, billList: newList, billForm: resetBillForm() };
-        }
-        const newEntry = { ...bill, _id: Date.now() };
-        return {
-          ...prev,
-          billList: [...prev.billList, newEntry],
-          billForm: resetBillForm(),
-        };
-      });
+    const poQty = Number(formData.poQty || 0);
 
-      toast.current?.show({
-        severity: "success",
-        summary: "Updated",
-        detail: "Bill updated",
-      });
+    // sum of already added bill quantities (exclude same record when editing)
+    const existingQty = formData.billList
+      .filter((b) => b._id !== bill._id)
+      .reduce((sum, b) => sum + Number(b.billQty), 0);
+
+    const newTotal = existingQty + Number(bill.billQty);
+
+    if (newTotal > poQty) {
+      // open dialog
+      setPendingBillData(bill);
+      setQtyDialogVisible(true);
       return;
     }
 
-    const newBill = { ...bill, _id: Date.now() };
-    setFormData((prev) => ({
-      ...prev,
-      billList: [...prev.billList, newBill],
-      billForm: resetBillForm(),
-    }));
-
-    toast.current?.show({
-      severity: "success",
-      summary: "Saved",
-      detail: "Bill added",
-    });
+    // quantity within limit → directly save
+    applyBillSave(bill);
   };
 
   const editBill = (row: BillItem) => {
@@ -721,6 +738,39 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
           poList={poDetails}
           supplierList={supplierDetails}
         />
+      </Dialog>
+
+      <Dialog
+        header="Quantity Exceeded"
+        visible={qtyDialogVisible}
+        style={{ width: "25rem" }}
+        onHide={() => setQtyDialogVisible(false)}
+      >
+        <p className="mb-4 text-red-500 font-semibold">
+          The quantity entered is more than ordered. Do you want to proceed?
+        </p>
+
+        <div className="flex justify-end gap-3">
+          <Button
+            label="Cancel"
+            severity="secondary"
+            onClick={() => {
+              setQtyDialogVisible(false);
+              setPendingBillData(null);
+            }}
+          />
+          <Button
+            label="Proceed"
+            onClick={() => {
+              if (pendingBillData) {
+                applyBillSave(pendingBillData);
+              }
+              setQtyDialogVisible(false);
+              setPendingBillData(null);
+            }}
+            autoFocus
+          />
+        </div>
       </Dialog>
     </div>
   );

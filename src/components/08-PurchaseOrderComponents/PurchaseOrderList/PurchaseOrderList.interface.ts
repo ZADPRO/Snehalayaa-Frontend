@@ -5,7 +5,7 @@ export interface PurchaseOrderListItem {
   supplierId: number;
   supplierName: string;
   creditedDays: number;
-
+  supplierCity: string;
   branchid: number;
   refBranchId: number;
   refBranchCode: string;

@@ -119,7 +119,7 @@ const PurchaseOrderList: React.FC = () => {
         <Column
           header="Supplier Name"
           field="supplierName"
-          style={{ minWidth: "12rem" }}
+          style={{ minWidth: "15rem" }}
           frozen
         />
 

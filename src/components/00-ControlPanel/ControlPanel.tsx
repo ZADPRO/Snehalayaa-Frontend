@@ -116,18 +116,23 @@ const ControlPanel: React.FC = () => {
       icon: <BarChart3 size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
-      name: "Nivas",
-      route: "/nivas",
-      icon: <Trophy size={45} className="icon-spin" strokeWidth={1} />,
-    },
-    {
       name: "Bundle In & Out",
       route: "/bundles",
       icon: <Boxes size={45} className="icon-spin" strokeWidth={1} />,
     },
     {
+      name: "Nivas",
+      route: "/nivas",
+      icon: <Trophy size={45} className="icon-spin" strokeWidth={1} />,
+    },
+    {
       name: "Issues & Bugs",
       route: "/issues",
+      icon: <Bug size={45} className="icon-spin" strokeWidth={1} />,
+    },
+    {
+      name: "Old Data Updations",
+      route: "/bulkUpdations",
       icon: <Bug size={45} className="icon-spin" strokeWidth={1} />,
     },
   ];
