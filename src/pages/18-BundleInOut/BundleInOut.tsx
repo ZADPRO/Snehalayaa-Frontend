@@ -42,7 +42,6 @@ const BundleInOut: React.FC = () => {
     Array.isArray(selectedInwardItems) && selectedInwardItems.length === 1;
   const selectedInward = editMode ? selectedInwardItems[0] : null;
   const isSingleSelected = selectedInwardItems.length === 1;
-  const isAnySelected = selectedInwardItems.length > 0;
 
   const leftToolbarTemplate = () => (
     <div className="flex gap-2">

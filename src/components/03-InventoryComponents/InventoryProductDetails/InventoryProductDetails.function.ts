@@ -11,8 +11,13 @@ export const fetchInventoryProductBySKU = async (
   );
 
   if (response.data?.status) {
+    // ✅ Store token in localStorage if present
+    if (response.data.token) {
+      localStorage.setItem("token", response.data.token);
+    }
+
     return response.data.data;
   } else {
-    throw new Error(response.data.error || "Failed to fetch product details");
+    throw new Error(response.data?.error || "Failed to fetch product details");
   }
 };

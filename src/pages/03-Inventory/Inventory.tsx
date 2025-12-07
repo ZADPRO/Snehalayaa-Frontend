@@ -81,7 +81,7 @@ const Inventory: React.FC = () => {
   }, []);
 
   // --- FILTER LOGIC ---
-  const filteredInventory = inventoryProductDetails.filter((item) => {
+  const filteredInventory = (inventoryProductDetails || []).filter((item) => {
     return (
       (categoryFilter ? item.categoryId === categoryFilter : true) &&
       (subCategoryFilter ? item.subCategoryId === subCategoryFilter : true) &&

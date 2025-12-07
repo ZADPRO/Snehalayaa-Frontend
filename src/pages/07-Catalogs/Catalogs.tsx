@@ -25,7 +25,7 @@ import {
 import InventoryProductDetails from "../../components/03-InventoryComponents/InventoryProductDetails/InventoryProductDetails";
 import { fetchInventoryProductBySKU } from "../../components/03-InventoryComponents/InventoryProductDetails/InventoryProductDetails.function";
 import type { InventoryProduct } from "../03-Inventory/Inventory.interface";
-import { fetchAllInventoryProducts } from "../03-Inventory/Inventory.function";
+import { fetchAllInventoryProducts } from "./Catalogs.function";
 
 const Catalogs: React.FC = () => {
   const toast = useRef<Toast>(null);

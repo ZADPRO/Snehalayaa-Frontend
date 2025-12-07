@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 
@@ -62,9 +61,7 @@ import "primereact/resources/themes/saga-purple/theme.css";
 // import 'primereact/resources/themes/arya-purple/theme.css'
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <PrimeReactProvider>
-      <App />
-    </PrimeReactProvider>{" "}
-  </StrictMode>
+  <PrimeReactProvider>
+    <App />
+  </PrimeReactProvider>
 );

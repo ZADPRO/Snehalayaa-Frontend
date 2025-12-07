@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState, createRef } from "react";
 import type { RefObject } from "react";
 
-import type { ProductGRNDialogProps } from "./ProductGRNDialog.interface";
+import type {
+  OptionItem,
+  ProductGRNDialogProps,
+} from "./ProductGRNDialog.interface";
 
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
@@ -19,26 +22,25 @@ import { getMasterList } from "../../../../10-ProductSettingsComponents/ProductS
 import type { ProductItem } from "../PurchaseOrderGRN.interface";
 import api from "../../../../../utils/api";
 import { baseURL } from "../../../../../utils/helper";
+import {
+  mapOptionToObject,
+  validateBeforeSave,
+  type RoundOffRule,
+} from "./ProductGRNDialog.function";
 
 const LAST_NAV_COL_INDEX = 6; // adapt if you change columns
-
-type OptionItem = {
-  label: string;
-  value: number;
-};
-
-type RoundOffRule = {
-  fromRange: string;
-  toRange: string;
-  prices: number[];
-};
 
 const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
   selectedPO,
   receivedQty,
+  quantityInMeters,
+  clothType,
   closeDialog,
   onGRNSave,
 }) => {
+  console.log("quantityInMeters", quantityInMeters);
+  console.log("clothType", clothType);
+  console.log("selectedPO", selectedPO);
   const toast = useRef<Toast>(null);
   const cellRefs = useRef<RefObject<any>[][]>([]);
 
@@ -84,16 +86,9 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
   const calculateTotal = (c: number, p: number) =>
     Number((c + (c * p) / 100).toFixed(2));
 
-  const mapOptionToObject = (list: OptionItem[], id: number | null) => {
-    if (id == null) return { id: null, name: "" };
-    const opt = list.find((o) => o.value === id);
-    return { id, name: opt?.label ?? "" };
-  };
-
   const loadMaster = async () => {
     try {
       const prods = await getProducts();
-
       const patterns = await getMasterList("patterns");
       const variants = await getMasterList("varient");
       const colors = await getMasterList("color");
@@ -246,47 +241,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
 
   const remainingQty = (receivedQty ?? 0) - rows.length;
 
-  // Validation before enabling Start/Save etc.
-  const validateBeforeSave = (): { ok: boolean; message?: string } => {
-    if (!product) return { ok: false, message: "Select a product." };
-    if (!lineNo || lineNo.trim() === "")
-      return { ok: false, message: "Line No is required." };
-    if (cost <= 0)
-      return { ok: false, message: "Cost must be greater than 0." };
-    if (profit < 0) return { ok: false, message: "Profit cannot be negative." };
-    if (!selectedPattern) return { ok: false, message: "Select a pattern." };
-    if (!selectedVariant) return { ok: false, message: "Select a variant." };
-    if (!selectedColor) return { ok: false, message: "Select a color." };
-    if (!selectedSize) return { ok: false, message: "Select a size." };
-    if (rows.length === 0)
-      return { ok: false, message: "Enter quantity to create rows." };
-
-    // per-row validations
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-      if (r.cost <= 0)
-        return { ok: false, message: `Row ${i + 1}: Cost must be > 0` };
-      if (r.profitPercent < 0)
-        return { ok: false, message: `Row ${i + 1}: Profit must be >= 0` };
-      if (qtyInMeters === "yes") {
-        if (!r.meterQty || r.meterQty <= 0)
-          return {
-            ok: false,
-            message: `Row ${i + 1}: Meter Qty required and must be > 0`,
-          };
-      }
-    }
-
-    // quantity not exceed receivedQty
-    if (receivedQty != null && quantity > receivedQty)
-      return {
-        ok: false,
-        message: `Entered quantity exceeds received quantity (${receivedQty}).`,
-      };
-
-    return { ok: true };
-  };
-
   // keyboard navigation: Enter moves to next cell (left->right, top->down)
   const handleKeyNavigation = (
     e: any,
@@ -324,7 +278,20 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
 
   // handle save (send payload to parent)
   const handleSave = () => {
-    const valid = validateBeforeSave();
+    const valid = validateBeforeSave({
+      product,
+      lineNo,
+      cost,
+      profit,
+      selectedPattern,
+      selectedVariant,
+      selectedColor,
+      selectedSize,
+      rows,
+      quantity,
+      receivedQty,
+      qtyInMeters,
+    });
     if (!valid.ok) {
       toast.current?.show({
         severity: "warn",
@@ -374,7 +341,7 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
   };
 
   return (
-    <div className="w-full h-full p-4">
+    <div className="w-full h-full mt-3">
       <Toast ref={toast} />
 
       {/* Top row: product / brand / hsn */}

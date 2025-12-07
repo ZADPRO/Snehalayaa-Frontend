@@ -14,6 +14,14 @@ import { Calendar } from "primereact/calendar";
 // import { Button } from "primereact/button";
 import { Sidebar } from "primereact/sidebar";
 import PurchaseOrderGRN from "./PurchaseOrderGRN/PurchaseOrderGRN";
+import type {
+  Branch,
+  Supplier,
+} from "../PurchaseOrderCreate/PurchaseOrderCreate.interface";
+import {
+  fetchBranch,
+  fetchSupplier,
+} from "../PurchaseOrderCreate/PurchaseOrderCreate.function";
 
 const PurchaseOrderList: React.FC = () => {
   const toast = useRef<Toast>(null);
@@ -22,6 +30,8 @@ const PurchaseOrderList: React.FC = () => {
   const [purchaseOrderDetails, setPurchaseOrderDetails] = useState<
     PurchaseOrderListItem[]
   >([]);
+  const [branchDetails, setBranchDetails] = useState<Branch[]>([]);
+  const [supplierDetails, setSupplierDetails] = useState<Supplier[]>([]);
 
   // 🔥 Sidebar State
   const [sidebarVisible, setSidebarVisible] = useState<boolean>(false);
@@ -29,10 +39,18 @@ const PurchaseOrderList: React.FC = () => {
     null
   );
 
+  const [selectedBranch, setSelectedBranch] = useState<number | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<number | null>(null);
+  const [fromDate, setFromDate] = useState<Date | null>(null);
+  const [toDate, setToDate] = useState<Date | null>(null);
+  const [globalFilter, setGlobalFilter] = useState<string>("");
+
   const load = async () => {
     setLoading(true);
     try {
       setPurchaseOrderDetails(await fetchPurchaseOrderList());
+      setBranchDetails(await fetchBranch());
+      setSupplierDetails(await fetchSupplier());
     } catch (err: any) {
       showToastMsg(
         toast,
@@ -63,34 +81,106 @@ const PurchaseOrderList: React.FC = () => {
     );
   };
 
+  const filteredPurchaseOrders = purchaseOrderDetails.filter((po) => {
+    // ✅ Branch Filter
+    if (selectedBranch && po.refBranchId !== selectedBranch) return false;
+
+    // ✅ Supplier Filter
+    if (selectedSupplier && po.supplierId !== selectedSupplier) return false;
+
+    // ✅ Date Range Filter (createdAt)
+    if (fromDate || toDate) {
+      const createdDate = new Date(po.createdAt);
+
+      if (fromDate && createdDate < fromDate) return false;
+      if (toDate && createdDate > toDate) return false;
+    }
+
+    // ✅ Global Search Filter
+    if (globalFilter.trim()) {
+      const search = globalFilter.toLowerCase();
+
+      const combinedFields = `
+      ${po.po_number}
+      ${po.supplierName}
+      ${po.refBranchCode}
+      ${po.status}
+      ${po.total}
+    `.toLowerCase();
+
+      if (!combinedFields.includes(search)) return false;
+    }
+
+    return true;
+  });
+
   return (
     <div>
       <Toast ref={toast} />
 
       <div className="flex gap-3 mb-3">
         <div className="flex-1">
-          <Dropdown placeholder="Select Branch" className="w-full" />
+          <Dropdown
+            placeholder="Select Branch"
+            className="w-full"
+            options={branchDetails}
+            optionValue="refBranchId"
+            optionLabel="refBranchName"
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.value)}
+            showClear
+          />
         </div>
         <div className="flex-1">
-          <Dropdown placeholder="Select Supplier" className="w-full" />
+          <Dropdown
+            placeholder="Select Supplier"
+            className="w-full"
+            optionValue="supplierId"
+            optionLabel="supplierName"
+            options={supplierDetails}
+            value={selectedSupplier}
+            onChange={(e) => setSelectedSupplier(e.value)}
+            showClear
+          />
         </div>
         <div className="flex-1">
-          <Calendar placeholder="From Date" className="w-full" showIcon />
+          <Calendar
+            placeholder="From Date"
+            className="w-full"
+            showIcon
+            value={fromDate}
+            showButtonBar
+            showOnFocus={false}
+            onChange={(e) => setFromDate(e.value as Date)}
+          />
         </div>
         <div className="flex-1">
-          <Calendar placeholder="To Date" className="w-full" showIcon />
+          <Calendar
+            placeholder="To Date"
+            className="w-full"
+            showIcon
+            value={toDate}
+            showButtonBar
+            showOnFocus={false}
+            onChange={(e) => setToDate(e.value as Date)}
+          />{" "}
         </div>
         <div className="flex-1 flex gap-3">
-          <Dropdown placeholder="PO Status" className="w-full" />
+          {/* <Dropdown placeholder="PO Status" className="w-full" /> */}
           {/* <Button label="Go" /> */}
         </div>
         <div className="flex-1">
-          <InputText placeholder="Global Search" className="w-full" />
+          <InputText
+            placeholder="Global Search"
+            className="w-full"
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+          />
         </div>
       </div>
 
       <DataTable
-        value={purchaseOrderDetails}
+        value={filteredPurchaseOrders}
         scrollable
         showGridlines
         stripedRows

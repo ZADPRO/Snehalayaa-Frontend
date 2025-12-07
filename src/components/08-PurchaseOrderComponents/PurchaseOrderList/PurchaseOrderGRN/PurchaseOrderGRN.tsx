@@ -9,6 +9,9 @@ import ProductGRNDialog from "./ProductGRNDialog/ProductGRNDialog";
 import ProductGRNInvoice from "./ProductGRNInvoice/ProductGRNInvoice";
 import { Divider } from "primereact/divider";
 import { createGRN, fetchGRNItemsByPO } from "./PurchaseOrderGRN.function";
+import { Dropdown } from "primereact/dropdown";
+import { FloatLabel } from "primereact/floatlabel";
+import { getBundleDetails } from "./ProductGRNDialog/ProductGRNDialog.function";
 
 interface Props {
   selectedPO: PurchaseOrderListItem | null;
@@ -21,6 +24,15 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
 
   const [existingGRNItems, setExistingGRNItems] = useState<any[]>([]);
+
+  const [quantityInMeters, setQuantityInMeters] = useState<"yes" | "no" | null>(
+    null
+  );
+  const [clothType, setClothType] = useState<"sarees" | "readymade" | null>(
+    null
+  );
+
+  const [bundleDetails, setBundleDetails] = useState<any[]>([]);
 
   // GRN data returned from child
   const [grnData, setGrnData] = useState<{
@@ -61,8 +73,14 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
   const fetchExistingGRN = async () => {
     try {
       const items = await fetchGRNItemsByPO(selectedPO.id);
+      const bundleDetails = await getBundleDetails(selectedPO.id);
+      console.log("bundleDetails", bundleDetails);
       console.log("items", items);
       setExistingGRNItems(items);
+      setBundleDetails(bundleDetails);
+      if (bundleDetails) {
+        setReceivedQty(bundleDetails.po_qty);
+      }
     } catch (err) {
       console.error("Failed to fetch GRN items", err);
     }
@@ -217,7 +235,42 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
       </div>
 
       <Dialog
-        header="Goods Receipt Note (GRN)"
+        header={
+          <div className="flex items-center w-full gap-5">
+            <span className="text-xl font-semibold">
+              Goods Receipt Note (GRN)
+            </span>
+            <div className="flex gap-3 mt-2">
+              <FloatLabel className="flex-1 always-float">
+                <Dropdown
+                  value={quantityInMeters}
+                  onChange={(e) => setQuantityInMeters(e.value)}
+                  placeholder="Quantity in Meters"
+                  options={[
+                    { label: "No", value: "no" },
+                    { label: "Yes", value: "yes" },
+                  ]}
+                  className="w-15rem"
+                />
+
+                <label htmlFor="quantityInMeters">Quantity in Meters?</label>
+              </FloatLabel>
+              <FloatLabel className="flex-1 always-float">
+                <Dropdown
+                  value={clothType}
+                  onChange={(e) => setClothType(e.value)}
+                  placeholder="Select Type"
+                  options={[
+                    { label: "Sarees", value: "sarees" },
+                    { label: "Ready Made", value: "readymade" },
+                  ]}
+                  className="w-15rem"
+                />
+                <label htmlFor="clothType">Cloth Type</label>
+              </FloatLabel>
+            </div>
+          </div>
+        }
         visible={showGRNDialog}
         style={{ width: "100vw", height: "100vh" }}
         modal
@@ -227,6 +280,8 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
         <ProductGRNDialog
           selectedPO={selectedPO}
           receivedQty={receivedQty}
+          quantityInMeters={quantityInMeters}
+          clothType={clothType}
           closeDialog={() => setShowGRNDialog(false)}
           onGRNSave={handleGRNSave}
         />
@@ -242,6 +297,7 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
       >
         <ProductGRNInvoice
           selectedPO={selectedPO}
+          bundleDetails={bundleDetails}
           closeDialog={() => setShowInvoiceDialog(false)}
         />
       </Dialog>
