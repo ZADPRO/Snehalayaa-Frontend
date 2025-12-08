@@ -20,3 +20,20 @@ export const transferStock = async (payload: any) => {
   );
   return response.data;
 };
+
+export const checkSKUOnlyGRN = async (sku: string) => {
+  const res = await api.post(`${baseURL}/admin/products/check-sku-only-grn`, {
+    sku,
+  });
+
+  return res.data;
+};
+
+export const createDebitNote = async (payload: any) => {
+  const res = await api.post(
+    `${baseURL}/admin/products/createDebitNote`,
+    payload
+  );
+
+  return res.data;
+};
