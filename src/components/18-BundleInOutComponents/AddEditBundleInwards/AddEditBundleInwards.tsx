@@ -10,7 +10,7 @@ import { InputNumber } from "primereact/inputnumber";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Dialog } from "primereact/dialog";
-import { Check, Eye, Pencil, Trash2 } from "lucide-react";
+import { Check, Eye, Pencil, Trash2, Upload } from "lucide-react";
 
 import { fetchPurchaseOrderList } from "../../08-PurchaseOrderComponents/PurchaseOrderList/PurchaseOrderList.function";
 import { fetchSupplier } from "../../08-PurchaseOrderComponents/PurchaseOrderCreate/PurchaseOrderCreate.function";
@@ -23,6 +23,7 @@ import type {
   FormState,
 } from "./AddEditBundleInwards.interface";
 import { createBundle, updateBundle } from "./AddEditBundleInwards.function";
+import BillUploadData from "../BillUploadData/BillUploadData";
 
 const receivingTypeOptions = [
   { name: "Done", code: "done" },
@@ -81,6 +82,7 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
   });
 
   const [previewVisible, setPreviewVisible] = useState(false);
+  const [docUploadVisible, setDocUploadVisible] = useState(false);
 
   const load = async () => {
     try {
@@ -713,6 +715,12 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
         {/* bottom action bar */}
         <div className="fixed flex justify-end gap-3 bottom-0 left-0 w-full shadow-md p-4 z-10">
           <Button
+            label="Upload Bill"
+            icon={<Upload />}
+            className="bg-[#8e5ea8] border-none gap-2"
+            onClick={() => setDocUploadVisible(true)}
+          />
+          <Button
             label="Preview"
             icon={<Eye />}
             className="bg-[#8e5ea8] border-none gap-2"
@@ -738,6 +746,15 @@ const AddEditBundleInwards: React.FC<AddEditProps> = ({
           poList={poDetails}
           supplierList={supplierDetails}
         />
+      </Dialog>
+
+      <Dialog
+        header="Upload Bills"
+        visible={docUploadVisible}
+        style={{ width: "70vw" }}
+        onHide={() => setDocUploadVisible(false)}
+      >
+        <BillUploadData data={formData} />
       </Dialog>
 
       <Dialog

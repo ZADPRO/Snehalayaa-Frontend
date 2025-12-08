@@ -56,9 +56,12 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
   const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
+  setSelectedSize(1);
 
   // qty in meters parent boolean
-  const [qtyInMeters, setQtyInMeters] = useState<"yes" | "no">("no");
+  // const [qtyInMeters, setQtyInMeters] = useState<"yes" | "no">("no");
+
+  const [taxRate, setTaxRate] = useState<number>(0);
 
   // inputs
   const [product, setProduct] = useState<number | null>(null);
@@ -150,13 +153,31 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
   useEffect(() => {
     if (!quantity || quantity <= 0) {
       setRows([]);
-      cellRefs.current = [];
       return;
     }
 
     const maxAllowed = receivedQty ?? Number.POSITIVE_INFINITY;
     const qtyToCreate = Math.min(quantity, maxAllowed);
 
+    // ✅ SAREES → GROUPED (SINGLE ROW)
+    if (clothType === "sarees") {
+      const row = {
+        sNo: 1,
+        lineNo: lineNo || "",
+        refNo: "COMMON",
+        cost,
+        profitPercent: profit,
+        total: calculateTotal(cost, profit),
+        meterQty: quantityInMeters === "yes" ? qtyToCreate : null,
+        quantity: qtyToCreate,
+        roundOff: applyRoundOff(calculateTotal(cost, profit)),
+      };
+
+      setRows([row]);
+      return;
+    }
+
+    // ✅ READYMADE → INDIVIDUAL ROWS
     const newRows = Array.from({ length: qtyToCreate }).map((_, i) => ({
       sNo: i + 1,
       lineNo: lineNo || "",
@@ -164,19 +185,20 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
       cost,
       profitPercent: profit,
       total: calculateTotal(cost, profit),
-      meterQty: qtyInMeters === "yes" ? 0 : null,
+      size: selectedSize, // ✅ SIZE AS COLUMN
       roundOff: applyRoundOff(calculateTotal(cost, profit)),
     }));
 
     setRows(newRows);
-
-    // reset refs
-    cellRefs.current = newRows.map(() =>
-      Array(LAST_NAV_COL_INDEX + 1)
-        .fill(null)
-        .map(() => createRef<any>())
-    );
-  }, [quantity, lineNo, cost, profit, qtyInMeters, productDetails]);
+  }, [
+    quantity,
+    lineNo,
+    cost,
+    profit,
+    quantityInMeters,
+    clothType,
+    selectedSize,
+  ]);
 
   const applyRoundOff = (mrp: number) => {
     if (!roundOffRules || roundOffRules.length === 0) return mrp;
@@ -290,7 +312,7 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
       rows,
       quantity,
       receivedQty,
-      qtyInMeters,
+      quantityInMeters,
     });
     if (!valid.ok) {
       toast.current?.show({
@@ -307,18 +329,31 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
       ...r,
       productId: product,
       productName: prodInfo?.productName ?? "",
-      pattern: mapOptionToObject(patternList, selectedPattern),
-      variant: mapOptionToObject(variantList, selectedVariant),
+      pattern:
+        clothType === "readymade"
+          ? mapOptionToObject(patternList, selectedPattern)
+          : mapOptionToObject(patternList, r.pattern),
+
+      variant:
+        clothType === "readymade"
+          ? mapOptionToObject(variantList, selectedVariant)
+          : mapOptionToObject(variantList, r.variant),
+
       color: mapOptionToObject(colorList, selectedColor),
-      size: mapOptionToObject(sizeList, selectedSize),
-      meterQty: qtyInMeters === "yes" ? Number(r.meterQty || 0) : null,
-      // roundOff and total already present in row
+      size:
+        clothType === "readymade"
+          ? mapOptionToObject(sizeList, r.size)
+          : mapOptionToObject(sizeList, selectedSize),
+
+      meterQty: quantityInMeters === "yes" ? Number(r.meterQty || 0) : null,
     }));
 
     const payload = {
       poId: selectedPO!.id,
       supplierId: selectedPO!.supplierId,
       branchId: selectedPO!.branchid,
+      taxRate,
+      taxAmount: (rows.reduce((s, r) => s + r.total, 0) * taxRate) / 100,
       items,
     };
 
@@ -366,7 +401,7 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
         </FloatLabel>
 
         <FloatLabel className="flex-1 always-float">
-          <InputText id="hsn" value={hsn} className="w-full" readOnly />
+          <InputText id="hsn" value={hsn} className="w-full" />
           <label htmlFor="hsn">HSN</label>
         </FloatLabel>
 
@@ -391,6 +426,27 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
         </FloatLabel>
 
         <FloatLabel className="flex-1 always-float">
+          <Dropdown
+            value={taxRate}
+            onChange={(e) => setTaxRate(e.value)}
+            options={[
+              { label: "0%", value: 0 },
+              { label: "2%", value: 2 },
+              { label: "2.5%", value: 2.5 },
+              { label: "5%", value: 5 },
+              { label: "8%", value: 8 },
+              { label: "12%", value: 12 },
+              { label: "18%", value: 18 },
+            ]}
+            className="w-full"
+          />
+          <label>Tax %</label>
+        </FloatLabel>
+      </div>
+
+      {/* second row: lineNo / cost / profit / quantity */}
+      <div className="flex gap-3 mt-3">
+        <FloatLabel className="flex-1 always-float">
           <InputNumber
             id="profit"
             value={profit}
@@ -404,10 +460,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
 
           <label htmlFor="profit">Margin %</label>
         </FloatLabel>
-      </div>
-
-      {/* second row: lineNo / cost / profit / quantity */}
-      <div className="flex gap-3 mt-3">
         <FloatLabel className="flex-1 always-float">
           <InputNumber
             id="quantity"
@@ -471,33 +523,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
           />
           <label htmlFor="color">Color</label>
         </FloatLabel>
-
-        <FloatLabel className="flex-1 always-float">
-          <Dropdown
-            id="size"
-            options={sizeList}
-            optionLabel="label"
-            optionValue="value"
-            value={selectedSize}
-            onChange={(e) => setSelectedSize(e.value)}
-            className="w-full"
-            filter
-          />
-          <label htmlFor="size">Size</label>
-        </FloatLabel>
-        <FloatLabel className="flex-1 always-float">
-          <Dropdown
-            id="qtyInMeters"
-            options={[
-              { label: "No", value: "no" },
-              { label: "Yes", value: "yes" },
-            ]}
-            value={qtyInMeters}
-            onChange={(e) => setQtyInMeters(e.value)}
-            className="w-full"
-          />
-          <label htmlFor="qtyInMeters">Quantity in Meters?</label>
-        </FloatLabel>
       </div>
 
       <div className="flex justify-between items-center gap-3 mt-3">
@@ -552,12 +577,11 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
             header="Ref No"
             body={(r, opts) => (
               <InputText
-                ref={getCellRef(opts.rowIndex, 1)}
-                value={r.refNo}
+                value={clothType === "sarees" ? "COMMON" : r.refNo}
+                disabled={clothType === "sarees"}
                 onChange={(e) =>
                   updateRow(opts.rowIndex, "refNo", e.target.value)
                 }
-                onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 1)}
                 className="w-full"
               />
             )}
@@ -619,18 +643,31 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
             )}
           />
 
-          {/* Meter Qty conditional */}
-          {qtyInMeters === "yes" && (
+          {clothType === "readymade" && (
+            <Column
+              header="Size"
+              body={(r, opts) => (
+                <Dropdown
+                  value={r.size}
+                  options={sizeList}
+                  optionLabel="label"
+                  optionValue="value"
+                  onChange={(e) => updateRow(opts.rowIndex, "size", e.value)}
+                  className="w-full"
+                />
+              )}
+            />
+          )}
+
+          {quantityInMeters === "yes" && (
             <Column
               header="Meter Qty"
               body={(r, opts) => (
                 <InputNumber
-                  ref={getCellRef(opts.rowIndex, 5)}
                   value={r.meterQty}
                   onValueChange={(e) =>
                     updateRow(opts.rowIndex, "meterQty", e.value ?? 0)
                   }
-                  onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 5)}
                   className="w-full"
                 />
               )}
