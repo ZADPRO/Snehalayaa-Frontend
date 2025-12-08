@@ -143,10 +143,6 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
         <div className="flex items-center gap-3">
           <Button label="Start GRN" onClick={handleStartGRN} />
           <Button
-            label="Upload Invoice"
-            onClick={() => setShowInvoiceDialog(true)}
-          />
-          <Button
             label="Save Products"
             onClick={async () => {
               if (!grnData) {
