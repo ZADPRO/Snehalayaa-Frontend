@@ -56,10 +56,33 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
   const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
-  setSelectedSize(1);
-
+  useEffect(() => {
+    setSelectedSize(1);
+  }, []);
   // qty in meters parent boolean
   // const [qtyInMeters, setQtyInMeters] = useState<"yes" | "no">("no");
+
+  const applyRoundOff = (mrp: number) => {
+    if (!roundOffRules || roundOffRules.length === 0) return mrp;
+
+    for (const rule of roundOffRules) {
+      const from = Number(rule.fromRange || 0);
+      const to = Number(rule.toRange || Number.POSITIVE_INFINITY);
+
+      if (mrp >= from && mrp <= to) {
+        // PRICES ARRAY MUST BE ASCENDING
+        const sortedPrices = [...rule.prices].sort((a, b) => a - b);
+
+        // Always take NEXT HIGHER value
+        const next = sortedPrices.find((p) => p > mrp);
+
+        // If no higher price exists, fallback to the highest one
+        return next ?? sortedPrices[sortedPrices.length - 1];
+      }
+    }
+
+    return mrp;
+  };
 
   const [taxRate, setTaxRate] = useState<number>(0);
 
@@ -200,28 +223,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
     selectedSize,
   ]);
 
-  const applyRoundOff = (mrp: number) => {
-    if (!roundOffRules || roundOffRules.length === 0) return mrp;
-
-    for (const rule of roundOffRules) {
-      const from = Number(rule.fromRange || 0);
-      const to = Number(rule.toRange || Number.POSITIVE_INFINITY);
-
-      if (mrp >= from && mrp <= to) {
-        // PRICES ARRAY MUST BE ASCENDING
-        const sortedPrices = [...rule.prices].sort((a, b) => a - b);
-
-        // Always take NEXT HIGHER value
-        const next = sortedPrices.find((p) => p > mrp);
-
-        // If no higher price exists, fallback to the highest one
-        return next ?? sortedPrices[sortedPrices.length - 1];
-      }
-    }
-
-    return mrp;
-  };
-
   const updateRow = (index: number, field: string, value: any) => {
     setRows((prev) =>
       prev.map((row, i) => {
@@ -314,6 +315,7 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
       receivedQty,
       quantityInMeters,
     });
+
     if (!valid.ok) {
       toast.current?.show({
         severity: "warn",
@@ -325,35 +327,58 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
 
     const prodInfo = productDetails.find((p) => p.id === product);
 
-    const items = rows.map((r) => ({
-      ...r,
-      productId: product,
-      productName: prodInfo?.productName ?? "",
-      pattern:
-        clothType === "readymade"
-          ? mapOptionToObject(patternList, selectedPattern)
-          : mapOptionToObject(patternList, r.pattern),
+    let items: any[] = [];
 
-      variant:
-        clothType === "readymade"
-          ? mapOptionToObject(variantList, selectedVariant)
-          : mapOptionToObject(variantList, r.variant),
+    // ✅ READYMADE → USE EXISTING ROWS DIRECTLY
+    if (clothType === "readymade") {
+      items = rows.map((r) => ({
+        ...r,
+        productId: product,
+        productName: prodInfo?.productName ?? "",
+        pattern: mapOptionToObject(patternList, selectedPattern),
+        variant: mapOptionToObject(variantList, selectedVariant),
+        color: mapOptionToObject(colorList, r.color),
+        size: mapOptionToObject(sizeList, r.size),
+        meterQty: quantityInMeters === "yes" ? Number(r.meterQty || 0) : null,
+      }));
+    }
 
-      color: mapOptionToObject(colorList, selectedColor),
-      size:
-        clothType === "readymade"
-          ? mapOptionToObject(sizeList, r.size)
-          : mapOptionToObject(sizeList, selectedSize),
+    // ✅ SAREES → GENERATE INDIVIDUAL ROWS FROM GROUPED ENTRY
+    if (clothType === "sarees") {
+      const baseRow = rows[0]; // grouped row
+      const qty = baseRow.quantity || quantity;
 
-      meterQty: quantityInMeters === "yes" ? Number(r.meterQty || 0) : null,
-    }));
+      items = Array.from({ length: qty }).map((_, i) => ({
+        sNo: i + 1,
+        lineNo: baseRow.lineNo,
+        refNo: `${baseRow.refNo || "SAREE"}-${i + 1}`,
+        cost: baseRow.cost,
+        profitPercent: baseRow.profitPercent,
+        total: baseRow.total,
+        roundOff: baseRow.roundOff,
+
+        productId: product,
+        productName: prodInfo?.productName ?? "",
+
+        pattern: mapOptionToObject(patternList, selectedPattern),
+        variant: mapOptionToObject(variantList, selectedVariant),
+        color: mapOptionToObject(colorList, selectedColor),
+        size: mapOptionToObject(sizeList, selectedSize),
+
+        meterQty:
+          quantityInMeters === "yes" ? Number(baseRow.meterQty || 0) : null,
+      }));
+    }
 
     const payload = {
       poId: selectedPO!.id,
       supplierId: selectedPO!.supplierId,
       branchId: selectedPO!.branchid,
-      taxRate,
-      taxAmount: (rows.reduce((s, r) => s + r.total, 0) * taxRate) / 100,
+
+      taxRate: String(taxRate),
+      taxAmount: String(
+        (items.reduce((s, r) => s + r.total, 0) * taxRate) / 100
+      ),
       items,
     };
 
@@ -366,7 +391,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
       detail: "GRN saved",
     });
 
-    // reset local state
     setRows([]);
     setQuantity(0);
     setLineNo("");
@@ -533,16 +557,6 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
         </div>
 
         <div className="flex gap-3">
-          <Button
-            label="Preview All"
-            onClick={() =>
-              toast.current?.show({
-                severity: "info",
-                summary: "Preview",
-                detail: "Preview not implemented",
-              })
-            }
-          />
           <Button label="Save All" onClick={handleSave} />
         </div>
       </div>
@@ -557,20 +571,22 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
           <Column header="S.No" body={(r) => r.sNo} style={{ width: "4rem" }} />
 
           {/* LINE NO */}
-          <Column
-            header="Line No"
-            body={(r, opts) => (
-              <InputText
-                ref={getCellRef(opts.rowIndex, 0)}
-                value={r.lineNo}
-                onChange={(e) =>
-                  updateRow(opts.rowIndex, "lineNo", e.target.value)
-                }
-                onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 0)}
-                className="w-full"
-              />
-            )}
-          />
+          {clothType === "readymade" && (
+            <Column
+              header="Line No"
+              body={(r, opts) => (
+                <InputText
+                  ref={getCellRef(opts.rowIndex, 0)}
+                  value={r.lineNo}
+                  onChange={(e) =>
+                    updateRow(opts.rowIndex, "lineNo", e.target.value)
+                  }
+                  onKeyDown={(e) => handleKeyNavigation(e, opts.rowIndex, 0)}
+                  className="w-full"
+                />
+              )}
+            />
+          )}
 
           {/* REF NO */}
           <Column
@@ -642,6 +658,22 @@ const ProductGRNDialog: React.FC<ProductGRNDialogProps> = ({
               />
             )}
           />
+
+          {clothType === "readymade" && (
+            <Column
+              header="Color"
+              body={(r, opts) => (
+                <Dropdown
+                  value={r.color}
+                  options={colorList}
+                  optionLabel="label"
+                  optionValue="value"
+                  onChange={(e) => updateRow(opts.rowIndex, "color", e.value)}
+                  className="w-full"
+                />
+              )}
+            />
+          )}
 
           {clothType === "readymade" && (
             <Column

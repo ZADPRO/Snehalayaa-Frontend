@@ -10,6 +10,9 @@ import ProductGRNInvoice from "./ProductGRNInvoice/ProductGRNInvoice";
 import { Divider } from "primereact/divider";
 import { createGRN, fetchGRNItemsByPO } from "./PurchaseOrderGRN.function";
 import { Dropdown } from "primereact/dropdown";
+import { Toast } from "primereact/toast";
+import { useRef } from "react";
+
 import { FloatLabel } from "primereact/floatlabel";
 import { getBundleDetails } from "./ProductGRNDialog/ProductGRNDialog.function";
 
@@ -19,6 +22,8 @@ interface Props {
 
 const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
   console.log("selectedPO", selectedPO);
+  const toast = useRef<Toast>(null);
+
   const [receivedQty, setReceivedQty] = useState<number | null>(null);
   const [showGRNDialog, setShowGRNDialog] = useState(false);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
@@ -45,7 +50,12 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
 
   const handleStartGRN = () => {
     if (!receivedQty || receivedQty <= 0) {
-      alert("Please enter a valid received quantity.");
+      toast.current?.show({
+        severity: "warn",
+        summary: "Invalid Quantity",
+        detail: "Please enter a valid received quantity.",
+        life: 3000,
+      });
       return;
     }
     setShowGRNDialog(true);
@@ -54,19 +64,40 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
   const handleGRNSave = (payload: {
     poId: number;
     supplierId: number;
+    branchId?: number;
+    taxRate?: string;
+    taxAmount?: string;
     items: any[];
   }) => {
+    const normalizedItems = payload.items.map((item) => ({
+      ...item,
+      clothType,
+      quantityInMeters,
+      isReadymade: clothType === "readymade",
+      isSaree: clothType === "sarees",
+    }));
+
     const finalPayload = {
       ...payload,
       branchId: selectedPO.refBranchId,
+      items: normalizedItems,
     };
 
-    console.log("✅ GRN DATA RECEIVED IN PARENT:", finalPayload);
+    console.log("✅ FINAL NORMALIZED GRN PAYLOAD:", finalPayload);
+
     setGrnData(finalPayload);
     setShowGRNDialog(false);
   };
 
-  const productRows = grnData?.items?.length ? grnData.items : existingGRNItems;
+  const productRows = Array.isArray(grnData?.items)
+    ? grnData.items
+    : Array.isArray(existingGRNItems)
+    ? existingGRNItems
+    : [];
+  const sareeRows = productRows.filter((r: any) => r.clothType === "sarees");
+  const readymadeRows = productRows.filter(
+    (r: any) => r.clothType === "readymade"
+  );
 
   const remainingQty = selectedPO.totalorderedqty - selectedPO.totalreceivedqty;
 
@@ -90,6 +121,10 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
     if (!selectedPO) return;
     fetchExistingGRN();
   }, [selectedPO]);
+
+  const dashIfEmpty = (value: any) => {
+    return value === null || value === undefined || value === "" ? "-" : value;
+  };
 
   return (
     <div className="">
@@ -146,7 +181,12 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
             label="Save Products"
             onClick={async () => {
               if (!grnData) {
-                alert("No GRN data to save!");
+                toast.current?.show({
+                  severity: "warn",
+                  summary: "Missing Data",
+                  detail: "No GRN data to save!",
+                  life: 3000,
+                });
                 return;
               }
 
@@ -156,9 +196,19 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
                   branchId: selectedPO.refBranchId, // 🔥 Correct place to pass branch id
                 });
                 console.log("GRN saved:", result);
-                alert("GRN Saved Successfully!");
+                toast.current?.show({
+                  severity: "success",
+                  summary: "Success",
+                  detail: "GRN Saved Successfully!",
+                  life: 3000,
+                });
               } catch (err: any) {
-                alert(err.message || "Failed to save GRN");
+                toast.current?.show({
+                  severity: "error",
+                  summary: "Save Failed",
+                  detail: err.message || "Failed to save GRN",
+                  life: 4000,
+                });
               }
             }}
           />
@@ -169,65 +219,64 @@ const PurchaseOrderGRN: React.FC<Props> = ({ selectedPO }) => {
       <div className="mt-2 mb-2">
         <p className="mb-2">Product Details</p>
 
-        {/* If GRN is done, show GRN items; else show original PO products */}
-        <DataTable showGridlines stripedRows value={productRows}>
-          <Column header="S.No" body={(_, opt) => opt.rowIndex + 1} />
+        {readymadeRows.length > 0 && (
+          <>
+            <h3 className="mt-3 mb-2 font-semibold">Ready Made Products</h3>
+            <DataTable showGridlines stripedRows value={readymadeRows}>
+              <Column header="S.No" body={(_, opt) => opt.rowIndex + 1} />
+              <Column
+                header="Product"
+                body={(row) => dashIfEmpty(row.productName)}
+              />
+              <Column header="Ref No" body={(row) => dashIfEmpty(row.refNo)} />
+              <Column
+                header="Pattern"
+                body={(row) => dashIfEmpty(row.pattern?.name)}
+              />
+              <Column
+                header="Variant"
+                body={(row) => dashIfEmpty(row.variant?.name)}
+              />
+              <Column
+                header="Color"
+                body={(row) => dashIfEmpty(row.color?.name)}
+              />
+              <Column
+                header="Size"
+                body={(row) => dashIfEmpty(row.size?.name)}
+              />
+              <Column header="Qty" body={() => 1} />
+              <Column header="Total" body={(row) => dashIfEmpty(row.total)} />
+            </DataTable>
+          </>
+        )}
 
-          {/* When GRN present: productName, else from PO */}
-          <Column field="productName" header="Product" />
-
-          <Column field="refNo" header="Ref No" />
-
-          <Column
-            header="Design"
-            body={(row: any) => row.design?.name ?? row.designName ?? ""}
-          />
-
-          <Column
-            header="Pattern"
-            body={(row: any) => row.pattern?.name ?? row.patternName ?? ""}
-          />
-
-          <Column
-            header="Variant"
-            body={(row: any) => row.variant?.name ?? row.variantName ?? ""}
-          />
-
-          <Column
-            header="Color"
-            body={(row: any) => row.color?.name ?? row.colorName ?? ""}
-          />
-
-          <Column
-            header="Size"
-            body={(row: any) => row.size?.name ?? row.sizeName ?? ""}
-          />
-
-          <Column field="profitPercent" header="Profit %" />
-
-          <Column field="total" header="Total" />
-
-          {/* Delete in main table for GRN items (optional) */}
-          {grnData && (
-            <Column
-              header="Delete"
-              body={(_, opt) => (
-                <Button
-                  text
-                  severity="danger"
-                  icon="pi pi-trash"
-                  onClick={() => {
-                    if (!grnData) return;
-                    const updatedItems = grnData.items.filter(
-                      (_: any, i: number) => i !== opt.rowIndex
-                    );
-                    setGrnData({ ...grnData, items: updatedItems });
-                  }}
-                />
-              )}
-            />
-          )}
-        </DataTable>
+        {sareeRows.length > 0 && (
+          <>
+            <h3 className="mt-5 mb-2 font-semibold">Sarees</h3>
+            <DataTable showGridlines stripedRows value={sareeRows}>
+              <Column header="S.No" body={(_, opt) => opt.rowIndex + 1} />
+              <Column
+                header="Product"
+                body={(row) => dashIfEmpty(row.productName)}
+              />
+              <Column header="Ref No" body={(row) => dashIfEmpty(row.refNo)} />
+              <Column
+                header="Pattern"
+                body={(row) => dashIfEmpty(row.pattern?.name)}
+              />
+              <Column
+                header="Color"
+                body={(row) => dashIfEmpty(row.color?.name)}
+              />
+              <Column
+                header="Meter Qty"
+                body={(row) => dashIfEmpty(row.meterQty)}
+              />
+              <Column header="Total" body={(row) => dashIfEmpty(row.total)} />
+            </DataTable>
+          </>
+        )}
       </div>
 
       <Dialog
