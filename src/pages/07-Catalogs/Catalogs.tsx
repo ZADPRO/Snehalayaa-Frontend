@@ -22,7 +22,6 @@ import {
   fetchSubCategories,
   fetchSupplier,
 } from "../../components/08-PurchaseOrderComponents/PurchaseOrderCreate/PurchaseOrderCreate.function";
-import InventoryProductDetails from "../../components/03-InventoryComponents/InventoryProductDetails/InventoryProductDetails";
 import { fetchInventoryProductBySKU } from "../../components/03-InventoryComponents/InventoryProductDetails/InventoryProductDetails.function";
 import type { InventoryProduct } from "../03-Inventory/Inventory.interface";
 import { fetchAllInventoryProducts } from "./Catalogs.function";

@@ -11,9 +11,9 @@ import { Dialog } from "primereact/dialog";
 import { MultiSelect } from "primereact/multiselect";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { Divider } from "primereact/divider";
 
 import { scanSKUService } from "./POS.function";
-import { Divider } from "primereact/divider";
 import { fetchEmployees } from "../../components/12-SupplierCustomerComponents/EmployeeComponents/ViewDeleteEmployees.function";
 
 const paymentOptions = [
@@ -22,6 +22,8 @@ const paymentOptions = [
   { label: "Card", value: "card" },
   { label: "Return", value: "return" },
 ];
+
+type ReturnStage = "none" | "original" | "replacement" | "done";
 
 const POS: React.FC = () => {
   const [sku, setSku] = useState("");
@@ -53,11 +55,31 @@ const POS: React.FC = () => {
   );
   const [paymentValues, setPaymentValues] = useState<any>({});
 
+  // Return flow
+  const [isReturnMode, setIsReturnMode] = useState(false);
+  const [returnStage, setReturnStage] = useState<ReturnStage>("none");
+  const [returnOriginalProduct, setReturnOriginalProduct] = useState<any>(null);
+  const [returnReplacementProduct, setReturnReplacementProduct] =
+    useState<any>(null);
+
   const totalAmount = products.reduce(
     (sum, p) =>
       sum + (p.price * p.qty - (p.price * p.qty * p.discountPercent) / 100),
     0
   );
+
+  const totalPaid =
+    (paymentValues.cash || 0) +
+    (paymentValues.online || 0) +
+    (paymentValues.card || 0) +
+    (paymentValues.return || 0); // return will stay 0, but kept for consistency
+
+  const balance = totalPaid - totalAmount;
+
+  const showPrimeAlert = (msg: string) => {
+    setAlertMessage(msg);
+    setShowAlert(true);
+  };
 
   const handleScan = async (e: any) => {
     if (e.key === "Enter") {
@@ -66,21 +88,86 @@ const POS: React.FC = () => {
 
       try {
         const result = await scanSKUService(skuValue);
-
         const product = result.data;
         const isFound = result.isFound;
 
         if (!product) {
           showPrimeAlert("SKU not found in database");
+          setSku("");
           return;
         }
 
         if (!isFound) {
+          // keep same behaviour: show warning but still allow
           showPrimeAlert(
             `This product belongs to branch ${product.productBranchId}, not your branch.`
           );
         }
 
+        // ✅ RETURN MODE FLOW
+        if (
+          isReturnMode &&
+          (returnStage === "original" || returnStage === "replacement")
+        ) {
+          if (returnStage === "original") {
+            // First product scanned for return (original)
+            setReturnOriginalProduct(product);
+            showPrimeAlert(
+              `Original product captured (₹${Number(
+                product.unitCost
+              )}). Now scan the replacement product.`
+            );
+            setReturnStage("replacement");
+            setSku("");
+            return;
+          }
+
+          if (returnStage === "replacement") {
+            if (!returnOriginalProduct) {
+              showPrimeAlert(
+                "Original product not captured. Please scan again."
+              );
+              setSku("");
+              return;
+            }
+
+            const originalPrice = Number(returnOriginalProduct.unitCost || 0);
+            const replacementPrice = Number(product.unitCost || 0);
+
+            if (replacementPrice !== originalPrice) {
+              showPrimeAlert(
+                `Replacement product price (₹${replacementPrice}) must match original price (₹${originalPrice}).`
+              );
+              setSku("");
+              return;
+            }
+
+            // ✅ Price matched → accept replacement product as sale line
+            setReturnReplacementProduct(product);
+            setSelectedProduct(product);
+
+            setProducts((prev) => [
+              ...prev,
+              {
+                id: prev.length + 1,
+                sku: product.barcode,
+                name: product.productName,
+                price: Number(product.unitCost),
+                qty: product.quantity ?? 1,
+                discountPercent: 0,
+              },
+            ]);
+
+            setReturnStage("done");
+            showPrimeAlert(
+              "✅ Return validated. Replacement product added to bill."
+            );
+            setSku("");
+            return;
+          }
+        }
+
+        // ✅ NORMAL FLOW (non-return or return already done)
         setSelectedProduct(product);
 
         setProducts((prev) => [
@@ -97,6 +184,7 @@ const POS: React.FC = () => {
       } catch (err) {
         showPrimeAlert("Error scanning SKU");
       }
+
       setSku("");
     }
   };
@@ -104,7 +192,6 @@ const POS: React.FC = () => {
   const deleteRow = (rowData: any) => {
     const filtered = products.filter((p) => p.id !== rowData.id);
 
-    // Reindex IDs properly
     const reIndexed = filtered.map((item, index) => ({
       ...item,
       id: index + 1,
@@ -122,11 +209,6 @@ const POS: React.FC = () => {
       text
     />
   );
-
-  const showPrimeAlert = (msg: string) => {
-    setAlertMessage(msg);
-    setShowAlert(true);
-  };
 
   const handlePaymentChange = (method: string, value: any) => {
     setPaymentValues((prev: any) => ({
@@ -149,16 +231,15 @@ const POS: React.FC = () => {
     setSelectedPaymentMethods([]);
     setPaymentValues({});
     setSku("");
+
+    // reset return flow
+    setIsReturnMode(false);
+    setReturnStage("none");
+    setReturnOriginalProduct(null);
+    setReturnReplacementProduct(null);
+
     setShowSidebar(false);
   };
-
-  const totalPaid =
-    (paymentValues.cash || 0) +
-    (paymentValues.online || 0) +
-    (paymentValues.card || 0) +
-    (paymentValues.return || 0);
-
-  const balance = totalPaid - totalAmount;
 
   const updateDiscount = (id: number, discount: number) => {
     const updated = products.map((item) => {
@@ -173,23 +254,33 @@ const POS: React.FC = () => {
 
   const openEmployeeDialog = async () => {
     try {
-      const list = await fetchEmployees(); // your API call
+      const list = await fetchEmployees();
       setEmployees(list);
       setShowEmployeeDialog(true);
-    } catch (err: any) {
+    } catch {
       showPrimeAlert("Failed to load employees");
     }
   };
 
-  <Button
-    label="Add Employee"
-    className="p-button-secondary"
-    onClick={() => openEmployeeDialog()}
-  />;
-
   const saveOrder = () => {
     if (!products.length) {
       showPrimeAlert("No products added");
+      return;
+    }
+
+    // ✅ BLOCK NEGATIVE BALANCE
+    if (balance < 0) {
+      showPrimeAlert(
+        "Balance amount is negative. Please collect full payment before proceeding."
+      );
+      return;
+    }
+
+    // ✅ In return mode, ensure flow is completed
+    if (isReturnMode && returnStage !== "done") {
+      showPrimeAlert(
+        "Return flow is not completed. Please scan original and replacement products."
+      );
       return;
     }
 
@@ -214,6 +305,25 @@ const POS: React.FC = () => {
         total: p.price * p.qty - (p.price * p.qty * p.discountPercent) / 100,
       })),
 
+      returnInfo: isReturnMode
+        ? {
+            original: returnOriginalProduct
+              ? {
+                  sku: returnOriginalProduct.barcode,
+                  productName: returnOriginalProduct.productName,
+                  price: Number(returnOriginalProduct.unitCost || 0),
+                }
+              : null,
+            replacement: returnReplacementProduct
+              ? {
+                  sku: returnReplacementProduct.barcode,
+                  productName: returnReplacementProduct.productName,
+                  price: Number(returnReplacementProduct.unitCost || 0),
+                }
+              : null,
+          }
+        : null,
+
       payment: {
         methods: selectedPaymentMethods,
         values: paymentValues,
@@ -224,6 +334,7 @@ const POS: React.FC = () => {
       summary: {
         totalAmount,
         totalItems: products.length,
+        isReturn: isReturnMode,
       },
     };
 
@@ -418,7 +529,24 @@ const POS: React.FC = () => {
         <MultiSelect
           value={selectedPaymentMethods}
           options={paymentOptions}
-          onChange={(e) => setSelectedPaymentMethods(e.value)}
+          onChange={(e) => {
+            setSelectedPaymentMethods(e.value);
+
+            if (e.value.includes("return")) {
+              setIsReturnMode(true);
+              setReturnStage("original");
+              setReturnOriginalProduct(null);
+              setReturnReplacementProduct(null);
+              showPrimeAlert(
+                "Return selected. Please scan the original product being returned."
+              );
+            } else {
+              setIsReturnMode(false);
+              setReturnStage("none");
+              setReturnOriginalProduct(null);
+              setReturnReplacementProduct(null);
+            }
+          }}
           display="chip"
           className="w-full"
         />
@@ -430,6 +558,7 @@ const POS: React.FC = () => {
               className="w-full"
               value={paymentValues[method] || 0}
               onValueChange={(e) => handlePaymentChange(method, e.value)}
+              disabled={method === "return"} // ✅ no manual return amount
             />
           </div>
         ))}
@@ -458,6 +587,7 @@ const POS: React.FC = () => {
         <p>{alertMessage}</p>
       </Dialog>
 
+      {/* CUSTOMER DIALOG */}
       <Dialog
         header="Add Customer"
         visible={showCustomerDialog}
@@ -465,7 +595,6 @@ const POS: React.FC = () => {
         style={{ width: "30vw" }}
       >
         <div className="space-y-5 mt-3">
-          {/* First Name */}
           <FloatLabel className="always-float">
             <InputText
               value={customerData.firstName}
@@ -477,7 +606,6 @@ const POS: React.FC = () => {
             <label>First Name</label>
           </FloatLabel>
 
-          {/* Last Name */}
           <FloatLabel className="always-float">
             <InputText
               value={customerData.lastName}
@@ -489,7 +617,6 @@ const POS: React.FC = () => {
             <label>Last Name</label>
           </FloatLabel>
 
-          {/* Mobile */}
           <FloatLabel className="always-float">
             <InputText
               value={customerData.mobile}
@@ -501,7 +628,6 @@ const POS: React.FC = () => {
             <label>Mobile Number</label>
           </FloatLabel>
 
-          {/* Email optional */}
           <FloatLabel className="always-float">
             <InputText
               value={customerData.email}
@@ -513,7 +639,6 @@ const POS: React.FC = () => {
             <label>Email (Optional)</label>
           </FloatLabel>
 
-          {/* District optional */}
           <FloatLabel className="always-float">
             <InputText
               value={customerData.district}
@@ -533,6 +658,7 @@ const POS: React.FC = () => {
         </div>
       </Dialog>
 
+      {/* EMPLOYEE DIALOG */}
       <Dialog
         header="Select Employee"
         visible={showEmployeeDialog}
