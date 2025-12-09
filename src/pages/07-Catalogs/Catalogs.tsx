@@ -26,6 +26,7 @@ import InventoryProductDetails from "../../components/03-InventoryComponents/Inv
 import { fetchInventoryProductBySKU } from "../../components/03-InventoryComponents/InventoryProductDetails/InventoryProductDetails.function";
 import type { InventoryProduct } from "../03-Inventory/Inventory.interface";
 import { fetchAllInventoryProducts } from "./Catalogs.function";
+import ViewEditProducts from "../../components/07-CatalogComponents/ViewEditProducts/ViewEditProducts";
 
 const Catalogs: React.FC = () => {
   const toast = useRef<Toast>(null);
@@ -269,7 +270,7 @@ const Catalogs: React.FC = () => {
         maximizable
         style={{ width: "60vw" }}
       >
-        <InventoryProductDetails product={selectedProduct} />
+        <ViewEditProducts product={selectedProduct} />
       </Dialog>
     </div>
   );
